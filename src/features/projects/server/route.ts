@@ -64,6 +64,7 @@ const app = new Hono()
           workspaceId: workspaceId || null,
           postDate: postDate ? new Date(postDate) : null,
           tentativeEndDate: tentativeEndDate ? new Date(tentativeEndDate) : null,
+          assignees: assignees && assignees.length > 0 ? assignees : null,
         })
         .returning();
 
