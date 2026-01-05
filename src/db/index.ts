@@ -54,6 +54,23 @@ export const db = new Proxy(baseDb, {
             get(qbTarget: any, qbProp: string) {
               const qbValue = qbTarget[qbProp];
               
+              // Intercept 'then' to handle promise results (for queries without .returning())
+              if (qbProp === 'then' && typeof qbValue === 'function') {
+                return function(this: any, ...args: any[]) {
+                  const promise = qbValue.apply(this, args);
+                  if (promise && typeof promise.then === 'function') {
+                    return promise.then((data: any) => {
+                      // For UPDATE/DELETE results without .returning(), just return void
+                      if (data && typeof data === 'object' && !Array.isArray(data)) {
+                        return undefined; // Return nothing to avoid serializing result objects
+                      }
+                      return data;
+                    });
+                  }
+                  return promise;
+                };
+              }
+              
               // Intercept .returning() method
               if (qbProp === 'returning' && typeof qbValue === 'function') {
                 return function(this: any, ...returningArgs: any[]) {
@@ -86,6 +103,22 @@ export const db = new Proxy(baseDb, {
                     return new Proxy(methodResult, {
                       get: (mrTarget: any, mrProp: string) => {
                         const mrValue = mrTarget[mrProp];
+                        
+                        // Handle 'then' for chained queries
+                        if (mrProp === 'then' && typeof mrValue === 'function') {
+                          return function(this: any, ...args: any[]) {
+                            const promise = mrValue.apply(this, args);
+                            if (promise && typeof promise.then === 'function') {
+                              return promise.then((data: any) => {
+                                if (data && typeof data === 'object' && !Array.isArray(data)) {
+                                  return undefined;
+                                }
+                                return data;
+                              });
+                            }
+                            return promise;
+                          };
+                        }
                         
                         if (mrProp === 'returning' && typeof mrValue === 'function') {
                           return function(this: any, ...retArgs: any[]) {

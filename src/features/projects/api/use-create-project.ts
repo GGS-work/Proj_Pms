@@ -16,7 +16,8 @@ export const useCreateProject = () => {
       const response = await client.api.projects.$post({ form });
 
       if (!response.ok) {
-        throw new Error("Failed to create project.");
+        const errorData = await response.json().catch(() => ({ error: "Failed to create project" }));
+        throw new Error(errorData.error || "Failed to create project");
       }
 
       return await response.json();
@@ -25,8 +26,8 @@ export const useCreateProject = () => {
       toast.success("Project created.");
       queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
-    onError: () => {
-      toast.error("Failed to create project.");
+    onError: (error) => {
+      toast.error(error.message || "Failed to create project.");
     },
   });
 

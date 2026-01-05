@@ -69,8 +69,8 @@ const app = new Hono()
       const user = c.get("user");
       console.log('[Mark All Read] User:', user.id, 'Marking all as read');
 
-      // Update all unread notifications to read - just execute without storing result
-      const updateQuery = db
+      // Update all unread notifications to read - wrap in void to discard result
+      void await db
         .update(notifications)
         .set({
           isRead: "true",
@@ -82,9 +82,6 @@ const app = new Hono()
             eq(notifications.isRead, "false")
           )
         );
-
-      // Execute the query but don't store the result to avoid #state error
-      await updateQuery;
 
       console.log('[Mark All Read] Successfully marked all as read');
 
@@ -126,13 +123,10 @@ const app = new Hono()
 
       console.log('[Clear All Notifications] User:', user.id, 'Clearing all notifications');
 
-      // Delete all notifications for this user - execute without storing result to avoid #state
-      const deleteQuery = db
+      // Delete all notifications for this user - wrap in void to discard result
+      void await db
         .delete(notifications)
         .where(eq(notifications.userId, user.id));
-
-      // Execute the query but don't store the result to avoid #state error
-      await deleteQuery;
 
       console.log('[Clear All Notifications] Successfully deleted all notifications');
 

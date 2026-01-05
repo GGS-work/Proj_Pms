@@ -53,8 +53,8 @@ export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
     resolver: zodResolver(createProjectSchema),
     defaultValues: {
       name: "",
-      postDate: undefined,
-      tentativeEndDate: undefined,
+      postDate: "",
+      tentativeEndDate: "",
       assignees: [],
     },
   });
@@ -63,7 +63,7 @@ export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
     const finalValues = {
       ...values,
       image: values.image instanceof File ? values.image : "",
-      assignees: selectedAssignees,
+      assignees: JSON.stringify(selectedAssignees), // Convert array to JSON string for FormData
     };
 
     mutate(

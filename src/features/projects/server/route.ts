@@ -48,6 +48,19 @@ const app = new Hono()
 
       const { name, image, workspaceId, postDate, tentativeEndDate, assignees } = c.req.valid("form");
 
+      // Validate required fields
+      if (!name || name.trim() === '') {
+        return c.json({ error: "Project name is required" }, 400);
+      }
+      
+      if (!postDate || postDate.trim() === '') {
+        return c.json({ error: "Start date is required" }, 400);
+      }
+      
+      if (!tentativeEndDate || tentativeEndDate.trim() === '') {
+        return c.json({ error: "End date is required" }, 400);
+      }
+
       // Project-centric: Any authenticated user can create projects
       // No workspace membership check needed anymore
 
@@ -56,15 +69,41 @@ const app = new Hono()
         uploadedImageUrl = undefined; // TODO: Implement image upload
       }
 
+      // Parse assignees from JSON string to array
+      let assigneesArray: string[] = [];
+      if (assignees) {
+        try {
+          assigneesArray = Array.isArray(assignees) ? assignees : JSON.parse(assignees as string);
+        } catch (e) {
+          console.error('Error parsing assignees:', e);
+        }
+      }
+
+      // Parse dates with validation (required fields, so they should be present)
+      const parsedPostDate = new Date(postDate);
+      if (isNaN(parsedPostDate.getTime())) {
+        return c.json({ error: "Invalid start date format" }, 400);
+      }
+
+      const parsedTentativeEndDate = new Date(tentativeEndDate);
+      if (isNaN(parsedTentativeEndDate.getTime())) {
+        return c.json({ error: "Invalid end date format" }, 400);
+      }
+      
+      // Validate end date is after start date
+      if (parsedTentativeEndDate <= parsedPostDate) {
+        return c.json({ error: "End date must be after start date" }, 400);
+      }
+
       const [project] = await db
         .insert(projects)
         .values({
           name,
           imageUrl: uploadedImageUrl,
           workspaceId: workspaceId || null,
-          postDate: postDate ? new Date(postDate) : null,
-          tentativeEndDate: tentativeEndDate ? new Date(tentativeEndDate) : null,
-          assignees: assignees && assignees.length > 0 ? assignees : null,
+          postDate: parsedPostDate,
+          tentativeEndDate: parsedTentativeEndDate,
+          assignees: assigneesArray.length > 0 ? assigneesArray : null,
         })
         .returning();
 
