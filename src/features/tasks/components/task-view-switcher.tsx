@@ -2,7 +2,7 @@
 
 import { LoaderIcon, PlusIcon, XIcon, FolderIcon } from "lucide-react";
 import { useQueryState } from "nuqs";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { usePermissionContext } from "@/components/providers/permission-provider";
 
 import { useProjectId } from "@/features/projects/hooks/use-project-id";
@@ -28,6 +28,7 @@ import { useCreateTaskModal } from "../hooks/use-create-task-modal";
 import { useTaskFilters } from "../hooks/use-task-filters";
 import { TaskStatus, Task } from "../types";
 import { useBulkUpdateTasks } from "../api/use-bulk-update-tasks";
+import { useCurrent } from "@/features/auth/api/use-current";
 import Link from "next/link";
 
 interface TaskViewSwitcherProps {
@@ -52,6 +53,7 @@ export const TaskViewSwitcher = ({
   const workspaceId = useWorkspaceId();
   const paramProjectId = useProjectId();
   const currentProjectId = paramProjectId || projectId;
+  const { data: currentUser } = useCurrent();
   
   // Fallback: Get first workspace if no workspaceId in route (for global tasks page)
   const { data: workspaces, isLoading: isLoadingWorkspaces } = useGetWorkspaces();
@@ -66,16 +68,58 @@ export const TaskViewSwitcher = ({
     projectId: currentProjectId || "skip",
   });
   
+  // Fetch all tasks (project + individual) for the current user
   const { data: tasks, isLoading: isLoadingTasks } = useGetTasks({
-    workspaceId: workspaceId, // Only filter by workspace when explicitly in workspace route
+    workspaceId: workspaceId,
     projectId: currentProjectId,
     assigneeId,
     status,
     dueDate,
     month,
     week,
-    limit: 2000, // Support large CSV uploads (e.g., 1276 rows)
+    limit: 2000,
   });
+
+  // Also fetch individual tasks when viewing a project
+  // This query gets tasks where projectId is null for the current user
+  const shouldFetchIndividualTasks = currentProjectId && currentUser?.id;
+  const { data: individualTasks, isLoading: isLoadingIndividualTasks } = useGetTasks({
+    assigneeId: shouldFetchIndividualTasks ? currentUser.id : undefined,
+    status,
+    dueDate,
+    month,
+    week,
+    limit: 100,
+  });
+
+  // Combine project tasks with individual tasks (filter client-side)
+  const combinedTasks = useMemo(() => {
+    if (!currentProjectId || !individualTasks) {
+      return tasks;
+    }
+    
+    const projectDocs = tasks?.documents ?? [];
+    const individualDocs = (individualTasks?.documents ?? []).filter(
+      (task: any) => task.projectId === null // Only include individual tasks
+    );
+    
+    // Merge and deduplicate by task ID
+    const allTasks = [...projectDocs, ...individualDocs];
+    const uniqueTasks = Array.from(
+      new Map(allTasks.map(task => [task.id, task])).values()
+    );
+    
+    console.log(`🔍 Combined tasks: ${projectDocs.length} project + ${individualDocs.length} individual = ${uniqueTasks.length} total`);
+    
+    return {
+      ...tasks,
+      documents: uniqueTasks,
+      total: uniqueTasks.length,
+    };
+  }, [tasks, individualTasks, currentProjectId]);
+
+  const finalTasks = combinedTasks;
+  const finalIsLoading = isLoadingTasks || (shouldFetchIndividualTasks && isLoadingIndividualTasks);
 
 
   const onKanbanChange = useCallback(
@@ -93,7 +137,7 @@ export const TaskViewSwitcher = ({
   };
 
   const handleAddSubtask = (parentTaskId: string) => {
-    const parentTask = tasks?.documents.find((t: any) => t.id === parentTaskId);
+    const parentTask = finalTasks?.documents.find((t: any) => t.id === parentTaskId);
     if (parentTask) {
       setParentTaskForSubtask(parentTask as Task);
       setIsSubtaskModalOpen(true);
@@ -142,7 +186,7 @@ export const TaskViewSwitcher = ({
         <DottedSeparator className="my-4" />
         <DataFilters hideProjectFilter={hideProjectFilter} />
         <DottedSeparator className="my-4" />
-        {isLoadingTasks || (isLoadingWorkspaces && !workspaceId) ? (
+        {finalIsLoading || (isLoadingWorkspaces && !workspaceId) ? (
           <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center">
             <LoaderIcon className="size-5 animate-spin text-muted-foreground" />
           </div>
@@ -159,7 +203,7 @@ export const TaskViewSwitcher = ({
               ) : effectiveWorkspaceId ? (
                 <JiraTableDynamic 
                   key={currentProjectId || effectiveWorkspaceId}
-                  data={(tasks?.documents ?? []) as Task[]}
+                  data={(finalTasks?.documents ?? []) as Task[]}
                   workspaceId={effectiveWorkspaceId}
                   onAddSubtask={handleAddSubtask}
                   canCreateTask={canCreateTask}
@@ -180,7 +224,7 @@ export const TaskViewSwitcher = ({
                 </div>
               ) : (
                 <DataKanban
-                  data={(tasks?.documents ?? []) as Task[]}
+                  data={(finalTasks?.documents ?? []) as Task[]}
                   onChange={onKanbanChange}
                 />
               )}
@@ -194,7 +238,7 @@ export const TaskViewSwitcher = ({
                   </p>
                 </div>
               ) : (
-                <DataCalendar data={(tasks?.documents ?? []) as Task[]} />
+                <DataCalendar data={(finalTasks?.documents ?? []) as Task[]} />
               )}
             </TabsContent>
           </>

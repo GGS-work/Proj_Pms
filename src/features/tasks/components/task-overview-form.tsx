@@ -56,8 +56,9 @@ export function TaskOverviewForm({
   const [outputFile, setOutputFile] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
 
-  // Only employees can submit task completion overviews
-  const canSubmitOverview = role === MemberRole.EMPLOYEE;
+  // Only non-admin members can submit task completion overviews
+  // Allow both MEMBER and EMPLOYEE roles
+  const canSubmitOverview = role === MemberRole.EMPLOYEE || role === MemberRole.MEMBER;
 
   // Close the form if admin tries to open it (use useEffect to avoid setState during render)
   useEffect(() => {
