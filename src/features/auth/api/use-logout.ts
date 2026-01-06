@@ -88,6 +88,13 @@ export const useLogout = () => {
         queryClient.clear();
         localStorage.clear();
         sessionStorage.clear();
+        
+        // Force clear auth cookie from client side as backup
+        document.cookie = 'jcn-jira-clone-session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax';
+        // Also try without explicit path
+        document.cookie = 'jcn-jira-clone-session=; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax';
+        
+        console.log('[Logout] All cookies cleared from client');
       } catch (e) {
         console.error('[Logout] Cache clear error:', e);
       }
@@ -108,6 +115,13 @@ export const useLogout = () => {
         queryClient.clear();
         localStorage.clear();
         sessionStorage.clear();
+        
+        // Force clear auth cookie from client side as backup
+        document.cookie = 'jcn-jira-clone-session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax';
+        // Also try without explicit path
+        document.cookie = 'jcn-jira-clone-session=; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax';
+        
+        console.log('[Logout Error] All cookies cleared from client');
       } catch (e) {
         console.error('[Logout] Cache clear error:', e);
       }

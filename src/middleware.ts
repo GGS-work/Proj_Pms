@@ -32,14 +32,28 @@ export function middleware(request: NextRequest) {
 
   // If unauthenticated user tries to access protected routes, redirect to sign-in
   if (!isAuthenticated && protectedRoutes.some(route => pathname.startsWith(route))) {
+    // Clear any stale cookies before redirecting
     const signInUrl = new URL('/sign-in', request.url);
-    // Add callback URL for redirect after login
     signInUrl.searchParams.set('from', pathname);
-    return NextResponse.redirect(signInUrl);
+    
+    const response = NextResponse.redirect(signInUrl);
+    
+    // If there's a cookie but no valid session, clear it
+    if (sessionToken) {
+      const cookieOptions = getAuthCookieConfig({ forDeletion: true });
+      response.cookies.set({
+        name: AUTH_COOKIE,
+        value: '',
+        expires: new Date(0),
+        ...cookieOptions,
+      });
+    }
+    
+    return response;
   }
 
   // For logout endpoint or expired sessions, ensure cookie is cleared
-  if (pathname === '/api/auth/logout' || (!isAuthenticated && sessionToken)) {
+  if (pathname === '/api/auth/logout') {
     const response = NextResponse.next();
     
     // Use standardized cookie configuration for deletion

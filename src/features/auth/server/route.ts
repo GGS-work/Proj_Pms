@@ -161,10 +161,24 @@ const app = new Hono()
       }
 
       // Always delete the cookie using standardized configuration
+      // Delete with multiple configurations to ensure removal across all scenarios
       const cookieOptions = getAuthCookieConfig({ forDeletion: true });
       logCookieConfig('delete', cookieOptions);
 
+      // Primary deletion
       deleteCookie(c, AUTH_COOKIE, cookieOptions);
+      
+      // Also delete without domain to catch browser-set cookies
+      const optionsNoDomain = { ...cookieOptions };
+      delete optionsNoDomain.domain;
+      deleteCookie(c, AUTH_COOKIE, optionsNoDomain);
+      
+      // Force set expired cookie as backup
+      setCookie(c, AUTH_COOKIE, '', {
+        ...cookieOptions,
+        maxAge: 0,
+        expires: new Date(0),
+      });
 
       console.log('[Logout] Logout successful');
       return c.json({ success: true, message: "Logged out successfully" });
