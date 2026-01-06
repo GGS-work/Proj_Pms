@@ -4,7 +4,7 @@ import { zValidator } from "@hono/zod-validator";
 import { eq, and, inArray } from "drizzle-orm";
 
 import { sessionMiddleware } from "@/lib/session-middleware";
-import { db } from "@/db";
+import { db, sql_client } from "@/db";
 import { members, users, tasks } from "@/db/schema";
 
 import { getMember } from "../utils";
@@ -288,7 +288,7 @@ const app = new Hono()
       return c.json({ error: "Cannot delete yourself" }, 400);
     }
 
-    await db.delete(members).where(eq(members.id, memberId));
+    await sql_client.unsafe(`DELETE FROM members WHERE id = '${memberId}'`);
 
     return c.json({ data: { id: memberId } });
   })

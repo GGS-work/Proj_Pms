@@ -41,7 +41,7 @@ export const DeleteProfileDialog = ({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogDescription asChild>
             {isLoading ? (
               <div className="flex items-center gap-2 py-4">
                 <Loader className="size-4 animate-spin" />
@@ -49,28 +49,28 @@ export const DeleteProfileDialog = ({
               </div>
             ) : (
               <div className="space-y-2">
-                <p>
+                <div>
                   This action cannot be undone. This will permanently delete the employee profile
                   and remove all associated data from the system.
-                </p>
+                </div>
                 {profile && (
                   <div className="mt-4 p-4 bg-muted rounded-md space-y-1">
-                    <p className="font-semibold text-foreground">Employee Details:</p>
-                    <p className="text-sm">
+                    <div className="font-semibold text-foreground">Employee Details:</div>
+                    <div className="text-sm">
                       <span className="font-medium">Name:</span> {profile.name}
-                    </p>
-                    <p className="text-sm">
+                    </div>
+                    <div className="text-sm">
                       <span className="font-medium">Email:</span> {profile.email}
-                    </p>
+                    </div>
                     {profile.designation && (
-                      <p className="text-sm">
+                      <div className="text-sm">
                         <span className="font-medium">Designation:</span> {profile.designation}
-                      </p>
+                      </div>
                     )}
                     {profile.department && (
-                      <p className="text-sm">
+                      <div className="text-sm">
                         <span className="font-medium">Department:</span> {profile.department}
-                      </p>
+                      </div>
                     )}
                   </div>
                 )}

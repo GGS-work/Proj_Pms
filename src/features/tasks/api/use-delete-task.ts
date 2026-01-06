@@ -1,26 +1,22 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { InferRequestType, InferResponseType } from "hono";
 import { toast } from "sonner";
-
-import { client } from "@/lib/rpc";
-
-type ResponseType = InferResponseType<
-  (typeof client.api.tasks)[":taskId"]["$delete"],
-  200
->;
-type RequestType = InferRequestType<
-  (typeof client.api.tasks)[":taskId"]["$delete"]
->;
 
 export const useDeleteTask = () => {
   const queryClient = useQueryClient();
 
-  const mutation = useMutation<ResponseType, Error, RequestType>({
-    mutationFn: async ({ param }) => {
-      const response = await client.api.tasks[":taskId"].$delete({ param });
+  const mutation = useMutation({
+    mutationFn: async ({ param }: { param: { taskId: string } }) => {
+      const response = await fetch(`/api/tasks/${param.taskId}/delete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to delete task.");
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete task");
       }
 
       return await response.json();

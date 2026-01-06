@@ -3,7 +3,7 @@
  * Provides functions to clean up stale and expired sessions
  */
 
-import { db } from '@/db';
+import { db, sql_client } from '@/db';
 import { sessions } from '@/db/schema';
 import { eq, lt, and } from 'drizzle-orm';
 
@@ -13,9 +13,7 @@ import { eq, lt, and } from 'drizzle-orm';
  */
 export async function deleteUserSessions(userId: string): Promise<void> {
   try {
-    await db
-      .delete(sessions)
-      .where(eq(sessions.userId, userId));
+    await sql_client`DELETE FROM user_sessions WHERE user_id = ${userId}`;
     
     console.log(`[Session Cleanup] Deleted all sessions for user: ${userId}`);
   } catch (error) {
@@ -30,9 +28,7 @@ export async function deleteUserSessions(userId: string): Promise<void> {
  */
 export async function deleteSession(sessionToken: string): Promise<void> {
   try {
-    await db
-      .delete(sessions)
-      .where(eq(sessions.sessionToken, sessionToken));
+    await sql_client`DELETE FROM user_sessions WHERE session_token = ${sessionToken}`;
     
     console.log(`[Session Cleanup] Deleted session ${sessionToken.substring(0, 8)}...`);
   } catch (error) {
@@ -47,9 +43,8 @@ export async function deleteSession(sessionToken: string): Promise<void> {
  */
 export async function cleanupExpiredSessions(): Promise<void> {
   try {
-    await db
-      .delete(sessions)
-      .where(lt(sessions.expires, new Date()));
+    const now = new Date();
+    await sql_client`DELETE FROM user_sessions WHERE expires < ${now}`;
     
     console.log('[Session Cleanup] Cleaned up expired sessions');
   } catch (error) {

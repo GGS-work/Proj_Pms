@@ -5,7 +5,7 @@ import { addDays } from "date-fns";
 import { eq, and } from "drizzle-orm";
 
 import { sessionMiddleware } from "@/lib/session-middleware";
-import { db } from "@/db";
+import { db, sql_client } from "@/db";
 import { invitations, members, users, workspaces } from "@/db/schema";
 import { createEmailService } from "@/lib/email";
 import { createInvitationEmailTemplate, createInvitationEmailSubject } from "@/lib/email-templates";
@@ -284,7 +284,7 @@ const app = new Hono()
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    await db.delete(invitations).where(eq(invitations.id, invitationId));
+    await sql_client.unsafe(`DELETE FROM invitations WHERE id = '${invitationId}'`);
 
     return c.json({ data: { id: invitationId } });
   });

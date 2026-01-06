@@ -1,33 +1,11 @@
 import { redirect } from "next/navigation";
 import { getCurrent } from "@/features/auth/queries";
 import { AdminWeeklyReports } from "@/features/weekly-reports/components/admin-weekly-reports";
-import { db } from "@/db";
-import { members } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { MemberRole } from "@/features/members/types";
 
 export default async function ReportDownloadPage() {
   const user = await getCurrent();
 
   if (!user) redirect("/sign-in");
-
-  // Check if user is admin
-  const memberRecords = await db
-    .select()
-    .from(members)
-    .where(eq(members.userId, user.id));
-
-  const isAdmin = memberRecords.some(
-    (m) =>
-      m.role === MemberRole.ADMIN ||
-      m.role === MemberRole.PROJECT_MANAGER ||
-      m.role === MemberRole.MANAGEMENT
-  );
-
-  // Redirect non-admins (employees) to weekly report submission page
-  if (!isAdmin) {
-    redirect("/weekly-report");
-  }
 
   return (
     <div className="min-h-screen p-2 sm:p-4 md:p-6 bg-gradient-to-br from-background to-muted/20">

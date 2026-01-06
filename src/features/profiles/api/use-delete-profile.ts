@@ -6,8 +6,12 @@ export const useDeleteProfile = () => {
 
   const mutation = useMutation({
     mutationFn: async (userId: string) => {
-      const response = await fetch(`/api/profiles/${userId}`, {
-        method: "DELETE",
+      const response = await fetch(`/api/profiles/${userId}/delete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
       });
 
       if (!response.ok) {

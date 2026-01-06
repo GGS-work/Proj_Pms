@@ -2,7 +2,7 @@ import "server-only";
 
 import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
-import { db } from "@/db";
+import { db, sql_client } from "@/db";
 import { sessions, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -69,7 +69,7 @@ export const sessionMiddleware = createMiddleware<AdditionalContext>(
       if (session.expires < new Date()) {
         // Delete expired session and cookie
         try {
-          await db.delete(sessions).where(eq(sessions.sessionToken, sessionToken));
+          await sql_client`DELETE FROM sessions WHERE session_token = ${sessionToken}`;
           
           // Clear the expired cookie
           const { deleteCookie } = await import('hono/cookie');

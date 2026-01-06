@@ -4,7 +4,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 
 import { sessionMiddleware } from "@/lib/session-middleware";
-import { db } from "@/db";
+import { db, sql_client } from "@/db";
 import { workspaces, members, tasks, projects } from "@/db/schema";
 import { getMember } from "@/features/members/utils";
 import { generateInviteCode } from "@/lib/utils";
@@ -193,7 +193,7 @@ const app = new Hono()
     }
 
     // Delete workspace (cascade will handle members, projects, tasks)
-    await db.delete(workspaces).where(eq(workspaces.id, workspaceId));
+    await sql_client.unsafe(`DELETE FROM workspaces WHERE id = '${workspaceId}'`);
 
     return c.json({ data: { id: workspaceId } });
   })

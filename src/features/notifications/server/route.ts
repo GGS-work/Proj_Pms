@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { eq, and, desc, sql } from "drizzle-orm";
 
-import { db } from "@/db";
+import { db, sql_client } from "@/db";
 import { notifications } from "@/db/schema";
 import { sessionMiddleware } from "@/lib/session-middleware";
 
@@ -69,8 +69,7 @@ const app = new Hono()
       const user = c.get("user");
       console.log('[Mark All Read] User:', user.id, 'Marking all as read');
 
-      // Update all unread notifications to read - wrap in void to discard result
-      void await db
+      await db
         .update(notifications)
         .set({
           isRead: "true",
@@ -81,7 +80,8 @@ const app = new Hono()
             eq(notifications.userId, user.id),
             eq(notifications.isRead, "false")
           )
-        );
+        )
+        .returning();
 
       console.log('[Mark All Read] Successfully marked all as read');
 
@@ -123,10 +123,7 @@ const app = new Hono()
 
       console.log('[Clear All Notifications] User:', user.id, 'Clearing all notifications');
 
-      // Delete all notifications for this user - wrap in void to discard result
-      void await db
-        .delete(notifications)
-        .where(eq(notifications.userId, user.id));
+      await sql_client.unsafe(`DELETE FROM notifications WHERE user_id = '${user.id}'`);
 
       console.log('[Clear All Notifications] Successfully deleted all notifications');
 
@@ -155,14 +152,7 @@ const app = new Hono()
       const { notificationId } = c.req.param();
       console.log('[Delete Notification] User:', user.id, 'Notification:', notificationId);
 
-      await db
-        .delete(notifications)
-        .where(
-          and(
-            eq(notifications.id, notificationId),
-            eq(notifications.userId, user.id) // Security: only user's own notifications
-          )
-        );
+      await sql_client.unsafe(`DELETE FROM notifications WHERE id = '${notificationId}' AND user_id = '${user.id}'`);
 
       console.log('[Delete Notification] Successfully deleted');
       return c.json({ success: true, message: "Notification deleted" });

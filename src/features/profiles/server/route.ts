@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { db } from "@/db";
+import { db, sql_client } from "@/db";
 import { users, customDesignations, customDepartments, members } from "@/db/schema";
 import { sessionMiddleware } from "@/lib/session-middleware";
 import { eq } from "drizzle-orm";
@@ -357,51 +357,6 @@ const app = new Hono()
   )
   .delete("/:userId", sessionMiddleware, async (c) => {
     try {
-      console.log('[Delete Profile] Starting delete operation');
-      
-      // Validate request method
-      if (c.req.method !== 'DELETE') {
-        return c.json({ error: "Method not allowed" }, 405);
-      }
-
-      const currentUser = c.get("user");
-      
-      // Validate user session
-      if (!currentUser || !currentUser.id) {
-        console.error('[Delete Profile] Invalid user session');
-        return c.json({ error: "Unauthorized - Invalid session" }, 401);
-      }
-
-      console.log('[Delete Profile] Current user:', currentUser.id);
-
-      // Check if user is admin
-      const adminCheck = await isUserAdmin(currentUser.id);
-      if (!adminCheck) {
-        console.warn('[Delete Profile] Non-admin attempted delete:', currentUser.id);
-        return c.json({ error: "Forbidden: Only admins can delete profiles" }, 403);
-      }
-
-      const userId = c.req.param("userId");
-      
-      // Validate userId parameter
-      if (!userId || userId.trim() === '') {
-        return c.json({ error: "User ID is required" }, 400);
-      }
-
-      console.log('[Delete Profile] Deleting user:', userId);
-
-      // Delete user - execute without .returning() to avoid #state error
-      await db
-        .delete(users)
-        .where(eq(users.id, userId));
-
-      console.log('[Delete Profile] User deleted successfully');
-
-      return c.json({ 
-        success: true, 
-        message: "Profile deleted successfully",
-        userId: userId
-      });
     } catch (error: any) {
       console.error('[Delete Profile] Error:', error);
       const errorMessage = error instanceof Error ? error.message : "Unknown error";

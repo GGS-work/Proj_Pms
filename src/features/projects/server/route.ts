@@ -6,7 +6,7 @@ import { eq, and, desc, gte, lte, inArray } from "drizzle-orm";
 
 import { TaskStatus } from "@/features/tasks/types";
 import { sessionMiddleware } from "@/lib/session-middleware";
-import { db } from "@/db";
+import { db, sql_client } from "@/db";
 import { projects, tasks, members } from "@/db/schema";
 import { MemberRole } from "@/features/members/types";
 
@@ -296,7 +296,7 @@ const app = new Hono()
 
     // Project-centric: Any authenticated user can delete projects
 
-    await db.delete(projects).where(eq(projects.id, projectId));
+    await sql_client.unsafe(`DELETE FROM projects WHERE id = '${projectId}'`);
 
     return c.json({ data: { id: projectId } });
   })

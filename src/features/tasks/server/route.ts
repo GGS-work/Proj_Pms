@@ -5,7 +5,7 @@ import { eq, and, desc, or, like, sql, inArray, gte, lte } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import { sessionMiddleware } from "@/lib/session-middleware";
-import { db } from "@/db";
+import { db, sql_client } from "@/db";
 import { tasks, projects, users, activityLogs, members, notifications, listViewColumns } from "@/db/schema";
 import { getMember } from "@/features/members/utils";
 import { MemberRole } from "@/features/members/types";
@@ -91,85 +91,6 @@ function generateCustomBatchId(projectName: string, userName: string): string {
 }
 
 const app = new Hono()
-  .delete("/:taskId", sessionMiddleware, async (c) => {
-    const user = c.get("user");
-    const { taskId } = c.req.param();
-
-    const [task] = await db
-      .select()
-      .from(tasks)
-      .where(eq(tasks.id, taskId))
-      .limit(1);
-
-    if (!task) {
-      return c.json({ error: "Task not found" }, 404);
-    }
-
-    // Only check workspace membership if workspaceId exists
-    if (task.workspaceId) {
-      const member = await getMember({
-        workspaceId: task.workspaceId,
-        userId: user.id,
-      });
-
-      if (!member) {
-        return c.json({ error: "Unauthorized" }, 401);
-      }
-
-      // RBAC: Permission checks
-      const role = member.role as MemberRole;
-      const allowedRoles = [MemberRole.ADMIN, MemberRole.PROJECT_MANAGER];
-      
-      // Admins and Project Managers can delete any task
-      if (allowedRoles.includes(role)) {
-        // Allow deletion
-      } 
-      // Employees can ONLY delete their own individual tasks (no project)
-      else if (role === MemberRole.EMPLOYEE) {
-        if (task.projectId !== null || task.assigneeId !== user.id) {
-          return c.json({ 
-            error: "Forbidden: You can only delete your own individual tasks" 
-          }, 403);
-        }
-      } 
-      // Other roles cannot delete tasks
-      else {
-        return c.json({ 
-          error: "Forbidden: Only admins and project managers can delete tasks" 
-        }, 403);
-      }
-    }
-    // For tasks without workspace (CSV uploads), allow deletion by any authenticated user
-    // In production, you might want to add additional checks here
-
-    await db.delete(tasks).where(eq(tasks.id, taskId));
-
-    // Log task deletion activity
-    try {
-      await db.insert(activityLogs).values({
-        actionType: ActivityAction.TASK_DELETED,
-        entityType: EntityType.TASK,
-        entityId: task.id,
-        userId: user.id,
-        userName: user.name,
-        workspaceId: task.workspaceId || null,
-        projectId: task.projectId || null,
-        taskId: task.id,
-        summary: `${user.name} deleted task "${task.summary}"`,
-        changes: {
-          metadata: {
-            taskSummary: task.summary,
-            taskStatus: task.status,
-            taskIssueId: task.issueId,
-          },
-        },
-      });
-    } catch (error) {
-      console.error('Failed to log task deletion activity:', error);
-    }
-
-    return c.json({ data: { id: task.id } });
-  })
   .get(
     "/",
     sessionMiddleware,
