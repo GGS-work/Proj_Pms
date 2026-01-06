@@ -27,6 +27,21 @@ import clients from "@/features/clients/server/route";
 
 const app = new Hono().basePath("/api");
 
+// Global error handler - ensures JSON responses even for uncaught errors
+app.onError((err, c) => {
+  console.error('Global API error:', err);
+  
+  // Return JSON error response instead of HTML
+  return c.json(
+    {
+      error: "Internal server error",
+      message: err.message || "An unexpected error occurred",
+      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    },
+    500
+  );
+});
+
 // CORS configuration for production
 const isProd = process.env.NODE_ENV === 'production';
 if (isProd && process.env.NEXT_PUBLIC_APP_URL) {
