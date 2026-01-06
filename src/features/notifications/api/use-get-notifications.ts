@@ -21,6 +21,8 @@ export const useGetNotifications = () => {
     refetchInterval: 30000, // Refetch every 30 seconds
     enabled: !!user, // Only fetch when user is authenticated
     staleTime: 10000, // Consider data fresh for 10 seconds to reduce flickering
+    retry: 1, // Only retry once on failure
+    refetchOnWindowFocus: false, // Prevent refetch on tab focus
   });
 
   return query;

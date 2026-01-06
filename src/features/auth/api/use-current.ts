@@ -16,7 +16,9 @@ export const useCurrent = () => {
 
       return data;
     },
-    staleTime: 0, // Always consider data stale so it refetches after invalidation
+    staleTime: 60000, // 1 minute - prevent constant refetching
+    retry: 1, // Only retry once on failure
+    refetchOnWindowFocus: false, // Prevent refetch on tab focus to reduce flickering
   });
 
   return query;

@@ -36,9 +36,15 @@ export function getAuthCookieConfig(options: {
   if (isProd && process.env.NEXT_PUBLIC_APP_URL) {
     try {
       const url = new URL(process.env.NEXT_PUBLIC_APP_URL);
-      // Only set domain if it's not localhost/IP
-      if (!url.hostname.match(/^(localhost|127\.0\.0\.1|\d+\.\d+\.\d+\.\d+)$/)) {
-        config.domain = url.hostname;
+      const hostname = url.hostname;
+      
+      // Don't set domain for localhost/IPs
+      if (!hostname.match(/^(localhost|127\.0\.0\.1|\d+\.\d+\.\d+\.\d+)$/)) {
+        // For Vercel deployments (*.vercel.app), don't set domain
+        // This allows cookies to work across preview deployments
+        if (!hostname.endsWith('.vercel.app')) {
+          config.domain = hostname;
+        }
       }
     } catch (e) {
       console.warn('[Cookie Config] Failed to parse NEXT_PUBLIC_APP_URL:', e);
