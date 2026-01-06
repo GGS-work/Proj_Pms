@@ -19,10 +19,10 @@ EMAIL_FROM=ggs@pms.com
 ### Application URL
 
 ```
-NEXT_PUBLIC_APP_URL=https://your-production-domain.vercel.app
+NEXT_PUBLIC_APP_URL=https://ems-ggs.vercel.app
 ```
 
-Replace `your-production-domain.vercel.app` with your actual Vercel deployment URL.
+**Your production URL:** https://ems-ggs.vercel.app
 
 ### Database (if not already set)
 
