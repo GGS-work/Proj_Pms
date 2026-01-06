@@ -80,6 +80,11 @@ export const useLogout = () => {
       
       // Clear all cached data immediately
       try {
+        // Remove specific queries first to stop polling
+        queryClient.removeQueries({ queryKey: ["notifications"] });
+        queryClient.removeQueries({ queryKey: ["current"] });
+        
+        // Clear all remaining cache
         queryClient.clear();
         localStorage.clear();
         sessionStorage.clear();
@@ -95,6 +100,11 @@ export const useLogout = () => {
       
       // Even on error, clear local data and redirect
       try {
+        // Remove specific queries first to stop polling
+        queryClient.removeQueries({ queryKey: ["notifications"] });
+        queryClient.removeQueries({ queryKey: ["current"] });
+        
+        // Clear all remaining cache
         queryClient.clear();
         localStorage.clear();
         sessionStorage.clear();

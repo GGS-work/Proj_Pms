@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { client } from "@/lib/rpc";
+import { useCurrent } from "@/features/auth/api/use-current";
 
 export const useGetNotifications = () => {
+  const { data: user } = useCurrent();
+  
   const query = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => {
@@ -16,6 +19,8 @@ export const useGetNotifications = () => {
       return data;
     },
     refetchInterval: 30000, // Refetch every 30 seconds
+    enabled: !!user, // Only fetch when user is authenticated
+    staleTime: 10000, // Consider data fresh for 10 seconds to reduce flickering
   });
 
   return query;
