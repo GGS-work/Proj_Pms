@@ -45,8 +45,13 @@ const app = new Hono()
   })
   .get("/current", sessionMiddleware, (c) => {
     const user = c.get("user");
-
-    return c.json({ data: user });
+    
+    // Add session validity indicator
+    return c.json({ 
+      data: user,
+      sessionValid: true,
+      timestamp: new Date().toISOString()
+    });
   })
   .post("/login", zValidator("json", loginSchema), async (c) => {
     try {
@@ -73,13 +78,18 @@ const app = new Hono()
       // CRITICAL: Delete all existing sessions for this user before creating new one
       // This prevents stale sessions from interfering with subsequent logouts
       try {
-        const deletedSessions = await db
+        const result = await db
           .delete(sessions)
           .where(eq(sessions.userId, user.id));
         console.log('[Login] Cleaned up existing sessions for user:', user.id);
       } catch (cleanupError) {
-        console.warn('[Login] Session cleanup warning:', cleanupError);
-        // Continue even if cleanup fails - not critical for login to succeed
+        console.error('[Login] Session cleanup failed:', cleanupError);
+        // Critical: If we can't cleanup sessions, login shouldn't proceed
+        // This prevents session leak issues
+        return c.json({ 
+          error: "Session cleanup failed. Please try again.",
+          details: cleanupError instanceof Error ? cleanupError.message : 'Unknown error'
+        }, 500);
       }
 
       // Create session
@@ -148,40 +158,67 @@ const app = new Hono()
       console.log('[Logout] Session token present:', !!sessionToken);
       console.log('[Logout] Session token (first 8 chars):', sessionToken ? sessionToken.substring(0, 8) : 'none');
 
+      // Track success for both DB and cookie operations
+      let sessionDeleted = false;
+      let cookieDeleted = false;
+
       if (sessionToken) {
         // Delete session from database using helper
         try {
           await deleteSession(sessionToken);
+          sessionDeleted = true;
+          console.log('[Logout] Session deleted from database');
         } catch (dbError) {
           console.error('[Logout] Database deletion error:', dbError);
-          // Continue even if session deletion fails - cookie deletion is more important
+          // Continue - cookie deletion is critical
         }
       } else {
         console.warn('[Logout] No session token found in cookie');
+        sessionDeleted = true; // No session to delete = success
       }
 
       // Always delete the cookie using standardized configuration
-      // Delete with multiple configurations to ensure removal across all scenarios
-      const cookieOptions = getAuthCookieConfig({ forDeletion: true });
-      logCookieConfig('delete', cookieOptions);
+      // Triple-layer deletion to ensure removal across all scenarios
+      try {
+        const cookieOptions = getAuthCookieConfig({ forDeletion: true });
+        logCookieConfig('delete', cookieOptions);
 
-      // Primary deletion
-      deleteCookie(c, AUTH_COOKIE, cookieOptions);
-      
-      // Also delete without domain to catch browser-set cookies
-      const optionsNoDomain = { ...cookieOptions };
-      delete optionsNoDomain.domain;
-      deleteCookie(c, AUTH_COOKIE, optionsNoDomain);
-      
-      // Force set expired cookie as backup
-      setCookie(c, AUTH_COOKIE, '', {
-        ...cookieOptions,
-        maxAge: 0,
-        expires: new Date(0),
+        // Layer 1: Primary deletion with full options
+        deleteCookie(c, AUTH_COOKIE, cookieOptions);
+        
+        // Layer 2: Delete without domain to catch browser-set cookies
+        const optionsNoDomain = { ...cookieOptions };
+        delete optionsNoDomain.domain;
+        deleteCookie(c, AUTH_COOKIE, optionsNoDomain);
+        
+        // Layer 3: Force set expired cookie as absolute backup
+        setCookie(c, AUTH_COOKIE, '', {
+          ...cookieOptions,
+          maxAge: 0,
+          expires: new Date(0),
+        });
+        
+        cookieDeleted = true;
+        console.log('[Logout] Cookie deletion completed successfully');
+      } catch (cookieError) {
+        console.error('[Logout] Cookie deletion error:', cookieError);
+        // Even if cookie deletion has an error, we'll report success
+        // since the session is gone from DB
+        cookieDeleted = false;
+      }
+
+      const message = sessionDeleted && cookieDeleted 
+        ? "Logged out successfully"
+        : sessionDeleted 
+          ? "Logged out (cookie cleanup may be incomplete)"
+          : "Logged out (session cleanup incomplete)";
+          
+      console.log('[Logout] Logout process completed:', { sessionDeleted, cookieDeleted });
+      return c.json({ 
+        success: true, 
+        message,
+        details: { sessionDeleted, cookieDeleted }
       });
-
-      console.log('[Logout] Logout successful');
-      return c.json({ success: true, message: "Logged out successfully" });
     } catch (error) {
       console.error('[Logout] Unexpected error:', error);
       // Even if something fails, try to delete the cookie and return success

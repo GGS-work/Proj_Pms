@@ -18,7 +18,9 @@ export const useLogout = () => {
       const fallbackRedirect = setTimeout(() => {
         console.warn('[Logout] Fallback redirect triggered');
         try {
+          // Clear all React Query cache
           queryClient.clear();
+          // Clear browser storage
           localStorage.clear();
           sessionStorage.clear();
         } catch (e) {
@@ -36,6 +38,8 @@ export const useLogout = () => {
         const apiUrl = process.env.NEXT_PUBLIC_APP_URL 
           ? `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/logout`
           : '/api/auth/logout';
+        
+        console.log('[Logout] Sending logout request to:', apiUrl);
         
         const response = await fetch(apiUrl, {
           method: 'POST',

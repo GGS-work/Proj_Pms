@@ -6,19 +6,31 @@ export const useCurrent = () => {
   const query = useQuery({
     queryKey: ["current"],
     queryFn: async () => {
-      const response = await client.api.auth.current.$get();
+      try {
+        const response = await client.api.auth.current.$get();
 
-      if (!response.ok) {
+        if (!response.ok) {
+          // Return null for 401 (unauthenticated), but throw for other errors
+          if (response.status === 401) {
+            return null;
+          }
+          throw new Error(`Auth check failed: ${response.status}`);
+        }
+
+        const { data } = await response.json();
+        return data;
+      } catch (error) {
+        // Network errors or server errors should return null in auth context
+        console.warn('[useCurrent] Auth check error:', error);
         return null;
       }
-
-      const { data } = await response.json();
-
-      return data;
     },
-    staleTime: 60000, // 1 minute - prevent constant refetching
-    retry: 1, // Only retry once on failure
-    refetchOnWindowFocus: false, // Prevent refetch on tab focus to reduce flickering
+    staleTime: 5 * 60 * 1000, // 5 minutes - aggressive caching to prevent flickering
+    gcTime: 10 * 60 * 1000, // 10 minutes cache time
+    retry: false, // Don't retry auth checks to prevent loops
+    refetchOnWindowFocus: false, // Prevent refetch on tab focus
+    refetchOnMount: false, // Don't refetch on component mount if data exists
+    refetchOnReconnect: false, // Don't refetch on network reconnect
   });
 
   return query;

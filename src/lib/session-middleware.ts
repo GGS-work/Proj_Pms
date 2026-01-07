@@ -60,7 +60,12 @@ export const sessionMiddleware = createMiddleware<AdditionalContext>(
         .limit(1);
 
       if (!result) {
-        return c.json({ error: "Unauthorized" }, 401);
+        // Session not found - clear cookie and return 401
+        const { deleteCookie } = await import('hono/cookie');
+        const { getAuthCookieConfig } = await import('./cookie-config');
+        const cookieOptions = getAuthCookieConfig({ forDeletion: true });
+        deleteCookie(c, AUTH_COOKIE, cookieOptions);
+        return c.json({ error: "Unauthorized - Session not found" }, 401);
       }
 
       const { session, user } = result;

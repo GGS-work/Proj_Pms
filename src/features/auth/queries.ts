@@ -4,6 +4,11 @@ import { sessions, users, members } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { AUTH_COOKIE } from "./constants";
 
+/**
+ * Get current authenticated user with session validation
+ * Returns null if unauthenticated or session expired
+ * Automatically cleans up expired sessions
+ */
 export const getCurrent = async () => {
   try {
     const sessionCookie = (await cookies()).get(AUTH_COOKIE);
@@ -19,7 +24,21 @@ export const getCurrent = async () => {
       .where(eq(sessions.sessionToken, sessionCookie.value))
       .limit(1);
 
-    if (!session || session.expires < new Date()) {
+    if (!session) {
+      console.warn('[getCurrent] Session not found in database');
+      return null;
+    }
+
+    // Check if session is expired
+    const now = new Date();
+    if (session.expires < now) {
+      console.warn('[getCurrent] Session expired, cleaning up');
+      
+      // Clean up expired session asynchronously (don't await)
+      db.delete(sessions)
+        .where(eq(sessions.sessionToken, sessionCookie.value))
+        .catch(err => console.error('[getCurrent] Failed to cleanup expired session:', err));
+      
       return null;
     }
 
@@ -30,8 +49,14 @@ export const getCurrent = async () => {
       .where(eq(users.id, session.userId))
       .limit(1);
 
-    return user || null;
-  } catch {
+    if (!user) {
+      console.warn('[getCurrent] User not found for session');
+      return null;
+    }
+
+    return user;
+  } catch (error) {
+    console.error('[getCurrent] Error:', error);
     return null;
   }
 };
