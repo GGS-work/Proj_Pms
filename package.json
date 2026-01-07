@@ -17,7 +17,8 @@
     "manage:roles": "tsx scripts/manage-member-roles.ts",
     "create:role-users": "tsx scripts/create-role-based-users.ts",
     "manage:test-users": "tsx scripts/manage-test-users.ts",
-    "add:users-to-workspaces": "tsx scripts/add-users-to-workspaces.ts"
+    "add:users-to-workspaces": "tsx scripts/add-users-to-workspaces.ts",
+    "seed:admin": "node seed-admin-user.js"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.1",
