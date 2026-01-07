@@ -1,10 +1,11 @@
 import { Hono } from "hono";
 import { eq, and, desc } from "drizzle-orm";
 
-import { db } from "@/db";
+import { db, sql_client } from "@/db";
 import { notifications } from "@/db/schema";
 import { sessionMiddleware } from "@/lib/session-middleware";
 
+// Notification management endpoints
 const app = new Hono()
   // Get user's notifications
   .get("/", sessionMiddleware, async (c) => {
@@ -63,97 +64,44 @@ const app = new Hono()
     }
   })
 
-  // Mark all notifications as read
+  //Mark all notifications as read
   .patch("/mark-all-read", sessionMiddleware, async (c) => {
     try {
       const user = c.get("user");
-      
-      // Validate user
       if (!user?.id) {
-        console.error('[Mark All Read] Invalid user session');
-        return c.json({ error: "Unauthorized - Invalid session" }, 401);
+        return c.json({ error: "Unauthorized" }, 401);
       }
       
-      console.log('[Mark All Read] User:', user.id, 'Marking all as read');
-
-      const result = await db
-        .update(notifications)
-        .set({
-          isRead: "true",
-          readAt: new Date(),
-        })
-        .where(
-          and(
-            eq(notifications.userId, user.id),
-            eq(notifications.isRead, "false")
-          )
-        )
-        .returning();
-
-      console.log('[Mark All Read] Successfully marked', result.length, 'notifications as read');
-
-      return c.json({ 
-        success: true, 
-        message: "All notifications marked as read",
-        count: result.length
-      });
+      // Use raw SQL to avoid Drizzle proxy objects
+      await sql_client`
+        UPDATE notifications 
+        SET is_read = 'true', read_at = NOW() 
+        WHERE user_id = ${user.id} AND is_read = 'false'
+      `;
+      
+      return c.json({ success: true, message: "All notifications marked as read" });
     } catch (error) {
-      console.error("[Mark All Read] Error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      console.error("[Mark All Read] Stack:", errorStack);
-      return c.json(
-        { 
-          success: false, 
-          error: "Failed to mark notifications as read",
-          details: errorMessage
-        },
-        500
-      );
+      console.error('[Mark All Read] Error:', error);
+      return c.json({ success: false, error: "Failed to mark notifications as read" }, 500);
     }
   })
 
   // Clear all notifications (MUST come before /:notificationId)
   .delete("/clear-all", sessionMiddleware, async (c) => {
     try {
-      console.log('[Clear All Notifications] Starting operation');
-      
       const user = c.get("user");
       
-      // Validate user session
       if (!user?.id) {
-        console.error('[Clear All Notifications] Invalid user session');
-        return c.json({ error: "Unauthorized - Invalid session" }, 401);
+        return c.json({ error: "Unauthorized" }, 401);
       }
 
-      console.log('[Clear All Notifications] User:', user.id, 'Clearing all notifications');
+      // Use raw SQL to avoid Drizzle proxy objects
+      await sql_client`DELETE FROM notifications WHERE user_id = ${user.id}`;
 
-      // Use Drizzle ORM instead of unsafe SQL
-      const result = await db
-        .delete(notifications)
-        .where(eq(notifications.userId, user.id))
-        .returning();
-
-      console.log('[Clear All Notifications] Successfully deleted', result.length, 'notifications');
-
-      return c.json({ 
-        success: true, 
-        message: "All notifications cleared",
-        count: result.length
-      });
+      return c.json({ success: true, message: "All notifications cleared" });
     } catch (error) {
       console.error("[Clear All Notifications] Error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      console.error("[Clear All Notifications] Stack:", errorStack);
-      return c.json(
-        { 
-          success: false, 
-          error: "Failed to clear notifications",
-          details: errorMessage
-        },
-        500
-      );
+      return c.json({ success: false, error: "Failed to clear notifications" }, 500);
     }
   })
 
@@ -162,32 +110,18 @@ const app = new Hono()
     try {
       const user = c.get("user");
       
-      // Validate user
       if (!user?.id) {
-        console.error('[Delete Notification] Invalid user session');
-        return c.json({ error: "Unauthorized - Invalid session" }, 401);
+        return c.json({ error: "Unauthorized" }, 401);
       }
       
       const { notificationId } = c.req.param();
-      console.log('[Delete Notification] User:', user.id, 'Notification:', notificationId);
 
-      // Use Drizzle ORM instead of unsafe SQL
-      const result = await db
-        .delete(notifications)
-        .where(
-          and(
-            eq(notifications.id, notificationId),
-            eq(notifications.userId, user.id)
-          )
-        )
-        .returning();
-
-      if (result.length === 0) {
-        console.warn('[Delete Notification] Notification not found or unauthorized');
-        return c.json({ error: "Notification not found" }, 404);
-      }
-
-      console.log('[Delete Notification] Successfully deleted');
+      // Use raw SQL to avoid Drizzle proxy objects
+      await sql_client`
+        DELETE FROM notifications 
+        WHERE id = ${notificationId} AND user_id = ${user.id}
+      `;
+      
       return c.json({ success: true, message: "Notification deleted" });
     } catch (error) {
       console.error("[Delete Notification] Error:", error);

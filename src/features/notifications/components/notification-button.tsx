@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useGetNotifications, useGetUnreadCount } from "../api/use-get-notifications";
+import { useGetNotifications } from "../api/use-get-notifications";
 import { useMarkNotificationRead } from "../api/use-mark-notification-read";
 import { useMarkAllNotificationsRead } from "../api/use-mark-all-read";
 import { useClearAllNotifications } from "../api/use-clear-all-notifications";
@@ -24,7 +24,12 @@ export const NotificationButton = () => {
   const [open, setOpen] = useState(false);
   const [expandedNotifications, setExpandedNotifications] = useState<Set<string>>(new Set());
   const { data: notifications = [], isLoading } = useGetNotifications();
-  const unreadCount = useGetUnreadCount();
+  
+  // Memoize unread count to prevent recalculation on every render
+  const unreadCount = useMemo(() => {
+    return notifications.filter((n: any) => n.isRead === "false").length;
+  }, [notifications]);
+  
   const { mutate: markAsRead } = useMarkNotificationRead();
   const { mutate: markAllAsRead } = useMarkAllNotificationsRead();
   const { mutate: clearAll, isPending: isClearing } = useClearAllNotifications();

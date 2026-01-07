@@ -16,8 +16,32 @@ export const useDeleteNotification = () => {
 
       return await response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    onMutate: async (notificationId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      
+      // Snapshot previous value
+      const previousNotifications = queryClient.getQueryData(["notifications"]);
+      
+      // Optimistically remove notification
+      queryClient.setQueryData(["notifications"], (old: any) => {
+        if (!old) return old;
+        return old.filter((notification: any) => notification.id !== notificationId);
+      });
+      
+      return { previousNotifications };
+    },
+    onError: (err, notificationId, context: any) => {
+      // Rollback on error
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(["notifications"], context.previousNotifications);
+      }
+    },
+    onSettled: () => {
+      // Delayed refetch to avoid flickering
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      }, 2000);
     },
   });
 

@@ -36,16 +36,36 @@ export const useClearAllNotifications = () => {
       console.log('[Clear All] Success:', result);
       return result;
     },
-    onSuccess: (data) => {
-      console.log('[Clear All] Invalidating queries');
-      toast.success(data.message || "All notifications cleared");
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      // Also update the notification count
+    onMutate: async () => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      
+      // Snapshot previous value
+      const previousNotifications = queryClient.getQueryData(["notifications"]);
+      
+      // Optimistically clear all
       queryClient.setQueryData(["notifications"], []);
+      
+      return { previousNotifications };
     },
-    onError: (error: Error) => {
+    onSuccess: (data) => {
+      console.log('[Clear All] Success');
+      toast.success(data.message || "All notifications cleared");
+    },
+    onError: (error: Error, _, context: any) => {
       console.error('[Clear All] Mutation error:', error);
+      // Rollback on error
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(["notifications"], context.previousNotifications);
+      }
       toast.error(error.message || "Failed to clear notifications");
+    },
+    // No need to refetch - we already set empty array
+    onSettled: () => {
+      // Light refetch after 3 seconds just to be sure
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      }, 3000);
     },
   });
 

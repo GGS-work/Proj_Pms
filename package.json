@@ -55,7 +55,7 @@
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
     "exceljs": "^4.4.0",
-    "hono": "^4.6.9",
+    "hono": "4.6.3",
     "jspdf": "^3.0.3",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.454.0",

@@ -36,14 +36,42 @@ export const useMarkAllNotificationsRead = () => {
       console.log('[Mark All Read] Success:', result);
       return result;
     },
+    onMutate: async () => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      
+      // Snapshot previous value
+      const previousNotifications = queryClient.getQueryData(["notifications"]);
+      
+      // Optimistically update all to read
+      queryClient.setQueryData(["notifications"], (old: any) => {
+        if (!old) return old;
+        return old.map((notification: any) => ({
+          ...notification,
+          isRead: "true",
+          readAt: new Date()
+        }));
+      });
+      
+      return { previousNotifications };
+    },
     onSuccess: (data) => {
-      console.log('[Mark All Read] Invalidating queries');
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      console.log('[Mark All Read] Success');
       toast.success(data.message || "All notifications marked as read");
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _, context: any) => {
       console.error('[Mark All Read] Mutation error:', error);
+      // Rollback on error
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(["notifications"], context.previousNotifications);
+      }
       toast.error(error.message || "Failed to mark notifications as read");
+    },
+    onSettled: () => {
+      // Delayed refetch to avoid flickering
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      }, 2000);
     },
   });
 

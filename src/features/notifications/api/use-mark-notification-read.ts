@@ -16,8 +16,38 @@ export const useMarkNotificationRead = () => {
 
       return await response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    // Optimistic update - update cache immediately without refetching
+    onMutate: async (notificationId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      
+      // Snapshot previous value
+      const previousNotifications = queryClient.getQueryData(["notifications"]);
+      
+      // Optimistically update
+      queryClient.setQueryData(["notifications"], (old: any) => {
+        if (!old) return old;
+        return old.map((notification: any) =>
+          notification.id === notificationId
+            ? { ...notification, isRead: "true", readAt: new Date() }
+            : notification
+        );
+      });
+      
+      return { previousNotifications };
+    },
+    // Rollback on error
+    onError: (err, notificationId, context: any) => {
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(["notifications"], context.previousNotifications);
+      }
+    },
+    // Don't refetch - trust the optimistic update
+    onSettled: () => {
+      // Only refetch after 2 seconds to avoid flickering
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      }, 2000);
     },
   });
 

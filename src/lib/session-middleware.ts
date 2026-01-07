@@ -102,7 +102,15 @@ export const sessionMiddleware = createMiddleware<AdditionalContext>(
         return c.json({ error: "Session expired" }, 401);
       }
 
-      c.set("user", user);
+      // Store user without Date objects to avoid Hono serialization issues
+      c.set("user", {
+        ...user,
+        createdAt: user.createdAt?.toISOString(),
+        updatedAt: user.updatedAt?.toISOString(),
+        dateOfBirth: user.dateOfBirth?.toISOString(),
+        dateOfJoining: user.dateOfJoining?.toISOString(),
+        emailVerified: user.emailVerified?.toISOString(),
+      } as any);
       c.set("userId", user.id);
 
       await next();
