@@ -47,6 +47,7 @@
 - [Key Highlights](#-key-highlights)
 - [Features](#-features)
 - [Tech Stack](#️-tech-stack)
+- [Database Schema](#-database-schema)
 - [Prerequisites](#-prerequisites)
 - [Getting Started](#-getting-started)
 - [Project Structure](#-project-structure)
@@ -165,7 +166,25 @@
 
 ---
 
-## 📦 Prerequisites
+## � Database Schema
+
+The system uses a comprehensive PostgreSQL database with **31 tables** covering:
+
+- **Core Tables (6):** Users, accounts, sessions, tokens, workspaces, members
+- **Project Management (8):** Projects, tasks, overviews, activity logs, notifications, requirements, invitations, client invitations
+- **Attendance & Reports (2):** Attendance tracking, weekly reports
+- **Bug Tracking (3):** Bugs, comments, custom types
+- **Configuration (4):** Custom designations, departments, board columns, list view columns
+- **Jira-Like System (7):** Custom fields, field values, issue types, workflows, boards, sprints, sprint tasks
+- **Custom Types (1):** Bug types
+
+**📄 Complete Schema Documentation:** See [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) for detailed table structures, relationships, and indexes.
+
+<p align="right">(<a href="#-table-of-contents">⬆️ back to top</a>)</p>
+
+---
+
+## �📦 Prerequisites
 
 Before you begin, ensure you have the following installed: 
 
