@@ -7,13 +7,18 @@ export const useMarkNotificationRead = () => {
   const mutation = useMutation({
     mutationFn: async (notificationId: string) => {
       console.log('[Mark Read API] Starting request for:', notificationId);
-      const response = await client.api.notifications[":notificationId"]["read"].$patch({
-        param: { notificationId },
+      
+      // Call Next.js API route instead of Hono route to avoid serialization issues
+      const response = await fetch(`/api/notifications/${notificationId}/read`, {
+        method: 'PATCH',
+        credentials: 'include',
       });
 
       console.log('[Mark Read API] Response status:', response.status);
       if (!response.ok) {
-        throw new Error("Failed to mark notification as read");
+        const error = await response.json();
+        console.error('[Mark Read API] Error response:', error);
+        throw new Error(error.error || "Failed to mark notification as read");
       }
 
       const result = await response.json();
