@@ -23,7 +23,7 @@ export async function POST(
         return [key, rest.join("=")];
       })
     );
-    const sessionToken = cookies["jcn-jira-clone-session"];
+    const sessionToken = cookies["session-token"];
 
     console.log('[Task Delete] Session token:', sessionToken ? 'Found' : 'Not found');
 
@@ -33,7 +33,7 @@ export async function POST(
 
     // Get user from session
     const sessions = await sql`
-      SELECT user_id FROM user_sessions 
+      SELECT user_id FROM sessions 
       WHERE session_token = ${sessionToken} 
       AND expires > NOW()
     `;

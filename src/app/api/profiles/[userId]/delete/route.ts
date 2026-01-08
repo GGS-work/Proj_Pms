@@ -26,7 +26,7 @@ export async function POST(
     );
     
     console.log('[Profile Delete] All cookies:', Object.keys(cookies));
-    const sessionToken = cookies["jcn-jira-clone-session"];
+    const sessionToken = cookies["session-token"];
 
     console.log('[Profile Delete] Session token:', sessionToken ? 'Found' : 'Not found');
 
@@ -36,7 +36,7 @@ export async function POST(
 
     // Get user from session
     const sessions = await sql`
-      SELECT user_id FROM user_sessions 
+      SELECT user_id FROM sessions 
       WHERE session_token = ${sessionToken} 
       AND expires > NOW()
     `;
@@ -91,7 +91,7 @@ export async function POST(
     const userToDelete = users[0];
 
     // Delete related data
-    await sql`DELETE FROM user_sessions WHERE user_id = ${userId}`;
+    await sql`DELETE FROM sessions WHERE user_id = ${userId}`;
     await sql`DELETE FROM members WHERE user_id = ${userId}`;
     await sql`DELETE FROM invitations WHERE email = ${userToDelete.email}`;
     await sql`DELETE FROM notifications WHERE user_id = ${userId}`;
