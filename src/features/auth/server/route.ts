@@ -97,17 +97,27 @@ const app = new Hono()
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 30); // 30 days
 
-      await db.insert(sessions).values({
-        sessionToken,
-        userId: user.id,
-        expires: expiresAt,
-      });
+      console.log('[Sign-in] Creating session for user:', user.id, 'Token:', sessionToken.substring(0, 10) + '...');
+
+      try {
+        const insertResult = await db.insert(sessions).values({
+          sessionToken,
+          userId: user.id,
+          expires: expiresAt,
+        }).returning();
+
+        console.log('[Sign-in] Session inserted successfully:', insertResult[0]?.sessionToken?.substring(0, 10) + '...');
+      } catch (sessionError) {
+        console.error('[Sign-in] Failed to insert session:', sessionError);
+        throw new Error('Failed to create session in database');
+      }
 
       // Use standardized cookie configuration
       const cookieOptions = getAuthCookieConfig({ includeMaxAge: true });
       logCookieConfig('set', cookieOptions);
 
       setCookie(c, AUTH_COOKIE, sessionToken, cookieOptions);
+      console.log('[Sign-in] Cookie set successfully');
 
       return c.json({ success: true });
     } catch (error) {

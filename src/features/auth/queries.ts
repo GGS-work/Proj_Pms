@@ -17,6 +17,8 @@ export const getCurrent = async () => {
       return null;
     }
 
+    console.log('[getCurrent] Looking for session token:', sessionCookie.value.substring(0, 10) + '...');
+
     // Get session from PostgreSQL
     const [session] = await db
       .select()
@@ -25,25 +27,31 @@ export const getCurrent = async () => {
       .limit(1);
 
     if (!session) {
-      console.warn('[getCurrent] Session not found in database');
+      console.warn('[getCurrent] Session not found in database. Token:', sessionCookie.value.substring(0, 10) + '...');
       
-      // Clear invalid cookie to prevent redirect loops
-      (await cookies()).delete(AUTH_COOKIE);
+      // Clear the invalid cookie
+      try {
+        const cookieStore = await cookies();
+        cookieStore.delete(AUTH_COOKIE);
+        console.log('[getCurrent] Cleared invalid session cookie');
+      } catch (err) {
+        console.error('[getCurrent] Failed to clear cookie:', err);
+      }
       
       return null;
     }
 
+    console.log('[getCurrent] Session found, user ID:', session.userId);
+
     // Check if session is expired
     const now = new Date();
     if (session.expires < now) {
-      console.warn('[getCurrent] Session expired, cleaning up');
+      console.warn('[getCurrent] Session expired at:', session.expires, 'Current time:', now);
       
-      // Clean up expired session and cookie
-      await db.delete(sessions)
+      // Clean up expired session asynchronously (don't await)
+      db.delete(sessions)
         .where(eq(sessions.sessionToken, sessionCookie.value))
         .catch(err => console.error('[getCurrent] Failed to cleanup expired session:', err));
-      
-      (await cookies()).delete(AUTH_COOKIE);
       
       return null;
     }
@@ -57,14 +65,6 @@ export const getCurrent = async () => {
 
     if (!user) {
       console.warn('[getCurrent] User not found for session');
-      
-      // Clean up orphaned session and cookie
-      await db.delete(sessions)
-        .where(eq(sessions.sessionToken, sessionCookie.value))
-        .catch(err => console.error('[getCurrent] Failed to cleanup orphaned session:', err));
-      
-      (await cookies()).delete(AUTH_COOKIE);
-      
       return null;
     }
 
