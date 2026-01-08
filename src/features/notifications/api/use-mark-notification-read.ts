@@ -6,44 +6,57 @@ export const useMarkNotificationRead = () => {
 
   const mutation = useMutation({
     mutationFn: async (notificationId: string) => {
+      console.log('[Mark Read API] Starting request for:', notificationId);
       const response = await client.api.notifications[":notificationId"]["read"].$patch({
         param: { notificationId },
       });
 
+      console.log('[Mark Read API] Response status:', response.status);
       if (!response.ok) {
         throw new Error("Failed to mark notification as read");
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log('[Mark Read API] Success:', result);
+      return result;
     },
     // Optimistic update - update cache immediately without refetching
     onMutate: async (notificationId) => {
+      console.log('[Mark Read] onMutate - Optimistically updating for:', notificationId);
+      
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["notifications"] });
       
       // Snapshot previous value
       const previousNotifications = queryClient.getQueryData(["notifications"]);
+      console.log('[Mark Read] Previous notifications count:', (previousNotifications as any)?.length);
       
       // Optimistically update
       queryClient.setQueryData(["notifications"], (old: any) => {
         if (!old) return old;
-        return old.map((notification: any) =>
+        const updated = old.map((notification: any) =>
           notification.id === notificationId
             ? { ...notification, isRead: "true", readAt: new Date() }
             : notification
         );
+        const unreadBefore = old.filter((n: any) => n.isRead === "false").length;
+        const unreadAfter = updated.filter((n: any) => n.isRead === "false").length;
+        console.log('[Mark Read] Unread count:', unreadBefore, '→', unreadAfter);
+        return updated;
       });
       
       return { previousNotifications };
     },
     // Rollback on error
     onError: (err, notificationId, context: any) => {
+      console.error('[Mark Read] Error occurred:', err);
       if (context?.previousNotifications) {
         queryClient.setQueryData(["notifications"], context.previousNotifications);
       }
     },
     // Don't refetch - trust the optimistic update
     onSettled: () => {
+      console.log('[Mark Read] onSettled - Will invalidate in 2 seconds');
       // Only refetch after 2 seconds to avoid flickering
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ["notifications"] });

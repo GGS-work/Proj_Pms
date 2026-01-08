@@ -51,8 +51,15 @@ export const NotificationButton = () => {
   };
 
   const handleNotificationClick = (notification: any, e: React.MouseEvent) => {
+    console.log('[Notification Click]', {
+      id: notification.id,
+      isRead: notification.isRead,
+      willMarkAsRead: notification.isRead === "false"
+    });
+
     // Always mark as read when clicking on any unread notification
     if (notification.isRead === "false") {
+      console.log('[Notification Click] Calling markAsRead for:', notification.id);
       markAsRead(notification.id);
     }
 
