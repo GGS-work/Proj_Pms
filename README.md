@@ -1,269 +1,409 @@
-﻿# 📊 Employee Management System
+﻿<div align="center">
 
-> A modern, full-featured project management platform built with Next.js, TypeScript, and PostgreSQL
+<!-- PROJECT LOGO -->
+<br />
+<p align="center">
+  <a href="https://github.com/karan4533/Proj_Pms">
+    <img src="public/logo.svg" alt="Logo" width="80" height="80">
+  </a>
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Drizzle](https://img.shields.io/badge/Drizzle-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black)](https://orm.drizzle.team/)
+  <h1 align="center">📊 Proj_Pms - Enterprise Project Management System</h1>
+
+  <p align="center">
+    A modern, full-featured project management platform built with Next.js, TypeScript, and PostgreSQL
+    <br />
+    <a href="./docs/COMPREHENSIVE_SYSTEM_GUIDE.md"><strong>📚 Explore the Documentation »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/karan4533/Proj_Pms/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/karan4533/Proj_Pms/issues">Request Feature</a>
+  </p>
+</p>
+
+<!-- TECH STACK BADGES -->
+<p align="center">
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js">
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
+  <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="TailwindCSS">
+  <img src="https://img.shields.io/badge/Drizzle-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black" alt="Drizzle ORM">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/github/license/karan4533/Proj_Pms?style=flat-square" alt="License">
+  <img src="https://img.shields.io/github/stars/karan4533/Proj_Pms?style=flat-square" alt="Stars">
+  <img src="https://img.shields.io/github/issues/karan4533/Proj_Pms?style=flat-square" alt="Issues">
+</p>
+
+</div>
 
 ---
 
 ## 📑 Table of Contents
 
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Tech Stack](#tech-stack)
-- [Quick Start](#quick-start)
-- [Project Structure](#project-structure)
-- [API Documentation](#api-documentation)
-- [Deployment](#deployment)
+- [Overview](#-overview)
+- [Key Highlights](#-key-highlights)
+- [Features](#-features)
+- [Tech Stack](#️-tech-stack)
+- [Database Schema](#-database-schema)
+- [Prerequisites](#-prerequisites)
+- [Getting Started](#-getting-started)
+- [Project Structure](#-project-structure)
+- [Database Schema](#️-database-schema)
+- [API Documentation](#-api-documentation)
+- [Documentation](#-documentation)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ---
 
+## 📋 Overview
 
-## 🎯 Overview
+**Proj_Pms** is a comprehensive, enterprise-grade project management system designed to rival platforms like Jira and Monday. com. Built with modern web technologies, it provides organizations with powerful tools for: 
 
-A comprehensive enterprise-grade employee and project management system designed for modern teams. Built with cutting-edge web technologies, offering real-time collaboration, task tracking, attendance management, and powerful analytics.
+- **Project & Task Management** – Organize work with Kanban boards and hierarchical tasks
+- **Team Collaboration** – Multi-workspace architecture with role-based access
+- **Bug Tracking** – Complete bug lifecycle management with severity levels
+- **Attendance Tracking** – Employee shift management with automated logging
+- **Analytics & Reporting** – Visual dashboards and weekly reports
 
-**Perfect for**: Development teams, agencies, consulting firms, and enterprises managing multiple projects.
+<p align="right">(<a href="#-table-of-contents">⬆️ back to top</a>)</p>
 
 ---
 
-## ✨ Key Features
+## 🎯 Key Highlights
 
-### 🔐 User Management
-- Role-based access control (Admin, Manager, Member)
-- Secure authentication with session management
-- User profiles and team management
+| Feature | Description |
+|---------|-------------|
+| ✅ **Multi-Workspace** | Role-based access control (RBAC) with team isolation |
+| ✅ **Kanban Boards** | Drag-and-drop task management interface |
+| ✅ **Bug Tracking** | Full lifecycle management with severity levels |
+| ✅ **Attendance System** | Automated shift tracking with cron jobs |
+| ✅ **Real-time Notifications** | Activity logging and instant updates |
+| ✅ **Custom Fields** | Jira-style flexible task attributes (JSONB) |
+| ✅ **Bulk Import/Export** | CSV support for 1,000+ rows |
+| ✅ **Weekly Reports** | Requirement tracking and progress reports |
+| ✅ **High Performance** | Optimized for 1,000+ concurrent users |
 
-### 📋 Project & Task Management
-- Hierarchical task structure with subtasks
-- Kanban board and list views
-- Custom fields and task dependencies
-- Epic and milestone tracking
-- Priority and status management
+<p align="right">(<a href="#-table-of-contents">⬆️ back to top</a>)</p>
 
-### ⏰ Attendance Tracking
-- Clock in/out functionality
-- Automatic shift end at 11:59 PM
-- Attendance reports and analytics
-- Workspace-specific tracking
+---
 
-### 🔔 Real-time Notifications
-- Instant task assignment alerts
-- Comment and mention notifications
-- Mark as read/unread
-- Optimistic UI updates
+## ✨ Features
 
-### 📊 Analytics & Reporting
-- Sprint burndown charts
-- Velocity tracking
-- Completion rate metrics
-- Time tracking reports
-- Custom report generation
+### 🔐 Authentication & Authorization
+- Secure authentication with **bcrypt** password hashing
+- Role-based access control:  `ADMIN`, `PROJECT_MANAGER`, `TEAM_LEAD`, `EMPLOYEE`, `MANAGEMENT`
+- Session management with automatic token refresh
+- Workspace invitations with email-based onboarding
+
+### 📊 Project & Task Management
+- Multi-project workspaces with team isolation
+- **Kanban boards** with drag-and-drop functionality
+- Task hierarchy with parent-child relationships
+- Dynamic custom fields (JSONB-based)
+- Bulk CSV import/export (1,000+ rows)
+- Advanced filtering and task priorities
 
 ### 🐛 Bug Tracking
-- Bug reporting with file attachments
-- Status tracking and prioritization
-- Comment system
-- Resolution tracking
+- Comprehensive bug tracker with severity levels
+- Bug lifecycle management (Open → In Progress → Resolved → Closed)
+- File attachments and comments support
+- Resolution tracking and metrics
 
-### 👥 Client Portal
-- Client invitation system
-- Limited project visibility
-- Progress tracking for stakeholders
+### ⏰ Attendance Management
+- Clock in/out system with shift tracking
+- Auto end-shift at 11: 59 PM (cron automation)
+- Daily task logging during shifts
+- Admin attendance dashboard with reports
+
+### 📈 Reporting & Analytics
+- Dashboard with task statistics and KPIs
+- Visual charts (pie, bar) for status distribution
+- Activity timeline (Jira-style audit logs)
+- Weekly reports and requirements tracking
+
+<p align="right">(<a href="#-table-of-contents">⬆️ back to top</a>)</p>
 
 ---
 
 ## 🛠️ Tech Stack
 
-**Frontend**
-- Next.js 16.1.1 (App Router)
-- React 19
-- TypeScript
-- Tailwind CSS
-- Shadcn UI Components
+<table>
+<tr>
+<td valign="top" width="50%">
 
-**Backend**
-- Next.js API Routes
-- Hono.js
-- Drizzle ORM
-- PostgreSQL
+### Frontend
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| [Next.js](https://nextjs.org/) | 14.2 | React framework with App Router |
+| [React](https://react.dev/) | 18 | UI library with Server Components |
+| [TypeScript](https://www.typescriptlang.org/) | 5 | Type-safe JavaScript |
+| [Tailwind CSS](https://tailwindcss.com/) | 3.4 | Utility-first CSS |
+| [shadcn/ui](https://ui.shadcn.com/) | Latest | Component library |
+| [TanStack Query](https://tanstack.com/query) | 5 | Data fetching & caching |
+| [React Hook Form](https://react-hook-form. com/) | Latest | Form management |
+| [Zod](https://zod.dev/) | Latest | Schema validation |
 
-**Deployment**
-- Vercel
-- Neon/Supabase (Database)
+</td>
+<td valign="top" width="50%">
+
+### Backend
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| [Hono](https://hono.dev/) | Latest | Web framework (RPC API) |
+| [PostgreSQL](https://www.postgresql.org/) | 16 | Relational database |
+| [Drizzle ORM](https://orm.drizzle.team/) | 0.44 | Type-safe ORM |
+| [bcryptjs](https://github.com/dcodeIO/bcrypt. js) | Latest | Password hashing |
+
+</td>
+</tr>
+</table>
+
+<p align="right">(<a href="#-table-of-contents">⬆️ back to top</a>)</p>
 
 ---
 
-## 🚀 Quick Start
+## � Database Schema
 
-### Prerequisites
+The system uses a comprehensive PostgreSQL database with **31 tables** covering:
+
+- **Core Tables (6):** Users, accounts, sessions, tokens, workspaces, members
+- **Project Management (8):** Projects, tasks, overviews, activity logs, notifications, requirements, invitations, client invitations
+- **Attendance & Reports (2):** Attendance tracking, weekly reports
+- **Bug Tracking (3):** Bugs, comments, custom types
+- **Configuration (4):** Custom designations, departments, board columns, list view columns
+- **Jira-Like System (7):** Custom fields, field values, issue types, workflows, boards, sprints, sprint tasks
+- **Custom Types (1):** Bug types
+
+**📄 Complete Schema Documentation:** See [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) for detailed table structures, relationships, and indexes.
+
+<p align="right">(<a href="#-table-of-contents">⬆️ back to top</a>)</p>
+
+---
+
+## �📦 Prerequisites
+
+Before you begin, ensure you have the following installed: 
+
+| Requirement | Version | Download |
+|-------------|---------|----------|
+| Node.js | 18.x or higher | [nodejs.org](https://nodejs.org/) |
+| PostgreSQL | 16.x or higher | [postgresql.org](https://www.postgresql.org/download/) |
+| npm / yarn / bun | Latest | Comes with Node.js |
+| Git | Latest | [git-scm.com](https://git-scm.com/) |
+
+<p align="right">(<a href="#-table-of-contents">⬆️ back to top</a>)</p>
+
+---
+
+## 🚀 Getting Started
+
+### 1️⃣ Clone the Repository
 
 ```bash
-Node.js 18+ and npm
-PostgreSQL database
+git clone https://github.com/karan4533/Proj_Pms.git
+cd Proj_Pms
 ```
 
-### Installation
+### 2️⃣ Install Dependencies
 
-1. **Clone and install**
-   ```bash
-   git clone <repository-url>
-   cd Management-system
-   npm install
-   ```
+```bash
+npm install
+# or
+yarn install
+# or
+bun install
+```
 
-2. **Configure environment**
-   
-   Create `.env.local`:
-   ```env
-   DATABASE_URL=postgresql://user:password@host:5432/database
-   NEXT_PUBLIC_APP_URL=http://localhost:3000
-   ```
+### 3️⃣ Environment Setup
 
-3. **Setup database**
-   ```bash
-   npx drizzle-kit push
-   ```
+Create a `.env.local` file in the root directory: 
 
-4. **Run development server**
-   ```bash
-   npm run dev
-   ```
+```env
+# Database (Required)
+DATABASE_URL="postgresql://username:password@localhost:5432/proj_pms_db"
 
-   Open [http://localhost:3000](http://localhost:3000)
+# Authentication (Required)
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-super-secret-key-here"
+
+# Application (Required)
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NODE_ENV="development"
+```
+
+### 4️⃣ Database Setup
+
+```bash
+# Generate database schema
+npm run db:generate
+
+# Run migrations
+npm run db: migrate
+
+# (Optional) Push schema directly
+npm run db: push
+```
+
+### 5️⃣ Run the Development Server
+
+```bash
+npm run dev
+```
+
+🎉 Open [http://localhost:3000](http://localhost:3000) in your browser! 
 
 ---
 
+### 📜 Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run db:generate` | Generate database migrations |
+| `npm run db:migrate` | Run database migrations |
+| `npm run db:push` | Push schema to database |
+| `npm run db:studio` | Open Drizzle Studio |
+
+<p align="right">(<a href="#-table-of-contents">⬆️ back to top</a>)</p>
+
+---
 
 ## 📁 Project Structure
 
 ```
-Management-system/
-├── src/
-│   ├── app/              # Next.js pages & API routes
-│   ├── components/       # Reusable UI components
-│   ├── features/         # Feature modules
-│   ├── db/               # Database config & schema
-│   ├── hooks/            # Custom React hooks
-│   ├── lib/              # Utility functions
-│   └── types/            # TypeScript types
-├── drizzle/              # Database migrations
-├── public/               # Static assets
-└── [config files]
+Proj_Pms/
+├── 📂 src/
+│   ├── 📂 app/                    # Next.js App Router
+│   │   ├── 📂 (auth)/             # Authentication routes
+│   │   ├── 📂 (dashboard)/        # Dashboard routes
+│   │   │   ├── 📂 attendance/     # Attendance management
+│   │   │   ├── 📂 bugs/           # Bug tracker
+│   │   │   ├── 📂 dashboard/      # Main dashboard
+│   │   │   ├── 📂 projects/       # Project management
+│   │   │   ├── 📂 tasks/          # Task management
+│   │   │   └── 📂 workspaces/     # Workspace management
+│   │   └── 📂 api/                # API routes (Hono RPC)
+│   ├── 📂 components/             # React components
+│   │   └── 📂 ui/                 # shadcn/ui components
+│   ├── 📂 db/                     # Database configuration
+│   │   ├── 📄 schema.ts           # Drizzle schema definitions
+│   │   └── 📄 index.ts            # Database connection
+│   ├── 📂 features/               # Feature modules
+│   │   ├── 📂 auth/               # Authentication logic
+│   │   ├── 📂 tasks/              # Task management
+│   │   ├── 📂 bugs/               # Bug tracking
+│   │   ├── 📂 attendance/         # Attendance system
+│   │   ├── 📂 projects/           # Project features
+│   │   └── 📂 workspaces/         # Workspace features
+│   └── 📂 lib/                    # Utility functions
+├── 📂 drizzle/                    # Database migrations
+├── 📂 docs/                       # Documentation
+├── 📂 public/                     # Static assets
+├── 📂 scripts/                    # Utility scripts
+├── 📄 package.json
+├── 📄 tsconfig.json
+└── 📄 tailwind.config. ts
 ```
+
+<p align="right">(<a href="#-table-of-contents">⬆️ back to top</a>)</p>
 
 ---
 
-## 📝 API Documentation
+## 🗄️ Database Schema
 
-### Authentication
-```
-POST   /api/auth/login      - Sign in
-POST   /api/auth/register   - Sign up
-POST   /api/auth/logout     - Sign out
-GET    /api/auth/current    - Get current user
-```
+### Core Tables
 
-### Notifications
-```
-GET    /api/notifications                 - List notifications
-PATCH  /api/notifications/[id]/read       - Mark as read
-PATCH  /api/notifications/mark-all-read   - Mark all read
-DELETE /api/notifications/[id]            - Delete notification
-DELETE /api/notifications/clear-all       - Clear all
-```
+| Table | Description |
+|-------|-------------|
+| `users` | User accounts with authentication & profiles |
+| `workspaces` | Multi-tenant workspaces with invite codes |
+| `members` | User-workspace relationships (RBAC) |
+| `projects` | Projects within workspaces |
+| `tasks` | Task management with custom fields (JSONB) |
+| `bugs` | Bug tracking with severity levels |
+| `attendance` | Attendance records with shift tracking |
+| `activity_logs` | Audit trail for all system changes |
+| `notifications` | User notifications |
+| `weekly_reports` | Weekly report submissions |
+| `requirements` | Project requirements |
+| `invitations` | Workspace invitations |
 
-### Tasks, Projects, Workspaces
-Feature modules expose full CRUD operations via REST API.
+### Key Database Features
 
----
+- ✅ **Foreign key constraints** for data integrity
+- ✅ **Indexed columns** for optimized queries
+- ✅ **JSONB fields** for flexible custom data
+- ✅ **Cascading deletes** for automatic cleanup
+- ✅ **Timestamps** for complete audit trails
 
-## 🚢 Deployment
+> 📖 See [Database Structure Documentation](./docs/DATABASE_STRUCTURE.md) for complete schema details. 
 
-### Vercel (Recommended)
-
-1. Push to GitHub
-2. Import in Vercel
-3. Set environment variables
-4. Deploy
-
-### Environment Variables
-
-```env
-DATABASE_URL              # Required
-NEXT_PUBLIC_APP_URL       # Required
-EMAIL_HOST                # Optional
-EMAIL_PORT                # Optional
-EMAIL_USER                # Optional
-EMAIL_PASS                # Optional
-```
+<p align="right">(<a href="#-table-of-contents">⬆️ back to top</a>)</p>
 
 ---
 
-## 📜 Scripts
+## 📡 API Documentation
 
-```bash
-npm run dev      # Development server
-npm run build    # Production build
-npm start        # Production server
-npm run lint     # Run ESLint
-npm run db:push  # Push schema changes
-npm run db:studio # Open Drizzle Studio
+The API is built using **Hono RPC** for type-safe client-server communication. 
+
+### Base URL
 ```
+http://localhost:3000/api
+```
+
+### Key Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/auth/login` | User authentication |
+| `GET` | `/api/workspaces` | List user workspaces |
+| `GET` | `/api/projects` | List workspace projects |
+| `GET` | `/api/tasks` | List project tasks |
+| `GET` | `/api/bugs` | List project bugs |
+| `GET` | `/api/attendance` | Get attendance records |
+
+<p align="right">(<a href="#-table-of-contents">⬆️ back to top</a>)</p>
+
+---
+
+## 📖 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [📚 Comprehensive System Guide](./docs/COMPREHENSIVE_SYSTEM_GUIDE. md) | Complete system overview |
+| [🗄️ Database Structure](./docs/DATABASE_STRUCTURE.md) | Database schema details |
+| [🔧 Custom Fields Guide](./docs/CUSTOM_FIELDS_GUIDE.md) | Dynamic field configuration |
+| [⏰ Auto End-Shift & Performance](./docs/AUTO_END_SHIFT_AND_PERFORMANCE.md) | Cron jobs & optimization |
+
+<p align="right">(<a href="#-table-of-contents">⬆️ back to top</a>)</p>
 
 ---
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing`)
-5. Open Pull Request
+Contributions are what make the open source community amazing! Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+<p align="right">(<a href="#-table-of-contents">⬆️ back to top</a>)</p>
 
 ---
 
-## 📄 License
+**Built by [Karan :)](https://github.com/karan4533)**
 
-This project is proprietary software. All rights reserved.
-
----
-
-## 🐛 Troubleshooting
-
-**Session Issues**
-- Ensure database has `sessions` table
-- Cookie name: `jcn-jira-clone-session`
-- Clear browser cookies and sign in fresh
-
-**Notifications**
-- Uses Next.js API routes for mutations
-- 60-second background polling
-- Optimistic updates enabled
-
-**Mobile View**
-- Uses `min-h-dvh` for proper height
-- Theme transitions disabled
-- Hydration warnings suppressed
-
----
-
-## 📞 Support
-
-For questions or issues, please open an issue in the repository.
-
----
-
-<div align="center">
-
-**Built with ❤️ using Next.js and modern web technologies**
-
-Made by GGS Information Services
+<p align="right">
+  <a href="#-table-of-contents">⬆️ Back to Top</a>
+</p>
 
 </div>
-
