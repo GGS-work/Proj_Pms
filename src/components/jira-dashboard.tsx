@@ -70,18 +70,25 @@ export const JiraDashboard = () => {
   // Fetch more tasks to handle large CSV uploads (e.g., 1276 rows)
   // Note: For datasets > 2000, consider implementing pagination
   const { data: tasksData, isLoading: isLoadingTasks } = useGetTasks({ limit: 2000 });
-  const { data: projectsData } = useGetProjects({});
+  const { data: projectsData, isLoading: isLoadingProjects } = useGetProjects({});
   const { data: membersData } = useGetMembers({});
   
   const allTasks = (tasksData?.documents as Task[]) || [];
   const projects = (projectsData?.documents || []) as any[];
   const members = (membersData?.documents || []) as any[];
 
-  // Auto-select first project for CLIENT users only
+  console.log('[Dashboard] Projects loaded:', { 
+    count: projects.length, 
+    isAdmin, 
+    isLoading: isLoadingProjects,
+    projects: projects.map(p => ({ id: p.id, name: p.name }))
+  });
+
+  // Auto-select first project for non-admin users (CLIENT and EMPLOYEE)
   useEffect(() => {
-    if (projects.length > 0 && !selectedProject && isAdmin === false) {
+    if (projects.length > 0 && selectedProject === "all" && isAdmin === false) {
       setSelectedProject(projects[0].id);
-      console.log("Auto-selected first project for CLIENT user:", projects[0].name);
+      console.log("Auto-selected first project for non-admin user:", projects[0].name);
     }
   }, [projects, selectedProject, isAdmin]);
 
