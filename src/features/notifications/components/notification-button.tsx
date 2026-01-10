@@ -63,13 +63,7 @@ export const NotificationButton = () => {
       markAsRead(notification.id);
     }
 
-    // If clicking on a long notification, just expand it (don't navigate)
-    if (notification.message.length > 100) {
-      toggleExpanded(notification.id, e);
-      return;
-    }
-    
-    // Navigate based on notification type
+    // Navigate based on notification type FIRST (before checking message length)
     if (notification.type === "TASK_IN_REVIEW") {
       // Navigate to tasks page with reviews tab
       router.push("/tasks?tab=overviews");
@@ -93,6 +87,10 @@ export const NotificationButton = () => {
       // Navigate to summary page to view requirements
       router.push("/summary");
       setOpen(false);
+    } else if (notification.message.length > 100) {
+      // If clicking on a long notification without a specific type, just expand it (don't navigate)
+      toggleExpanded(notification.id, e);
+      return;
     }
   };
 
