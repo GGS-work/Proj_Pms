@@ -2,7 +2,7 @@ import { zValidator } from "@hono/zod-validator";
 import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 import { Hono } from "hono";
 import { z } from "zod";
-import { eq, and, desc, gte, lte, inArray } from "drizzle-orm";
+import { eq, and, desc, gte, lte, inArray, isNotNull, or, sql } from "drizzle-orm";
 
 import { TaskStatus } from "@/features/tasks/types";
 import { sessionMiddleware } from "@/lib/session-middleware";
@@ -163,26 +163,41 @@ const app = new Hono()
             .limit(50);
         }
       } else {
-        // Employees: Return only projects where they have tasks assigned
+        // Employees & Team Leads: Return projects where they:
+        // 1. Have tasks assigned, OR
+        // 2. Are listed in the project's assignees array
+        
+        // Get projects from tasks assigned to user
         const userTasks = await db
           .select({ projectId: tasks.projectId })
           .from(tasks)
           .where(
             and(
               eq(tasks.assigneeId, user.id),
-              // Exclude null projectIds (individual tasks)
-              // @ts-ignore - SQL comparison with null
-              eq(tasks.projectId, tasks.projectId)
+              isNotNull(tasks.projectId) // Only tasks with a projectId
             )
           )
           .groupBy(tasks.projectId);
         
-        const projectIds = userTasks
+        const projectIdsFromTasks = userTasks
           .map(t => t.projectId)
           .filter((id): id is string => id !== null);
         
-        if (projectIds.length === 0) {
-          // No projects with assigned tasks
+        // Get projects where user is in assignees array
+        const projectsWithUser = await db
+          .select({ id: projects.id })
+          .from(projects)
+          .where(
+            sql`${projects.assignees}::jsonb @> ${JSON.stringify([user.id])}::jsonb`
+          );
+        
+        const projectIdsFromAssignees = projectsWithUser.map(p => p.id);
+        
+        // Combine both sources and remove duplicates
+        const allProjectIds = [...new Set([...projectIdsFromTasks, ...projectIdsFromAssignees])];
+        
+        if (allProjectIds.length === 0) {
+          // No projects with assigned tasks or assignee membership
           return c.json({ data: { documents: [], total: 0 } });
         }
         
@@ -193,7 +208,7 @@ const app = new Hono()
             .where(
               and(
                 eq(projects.workspaceId, workspaceId),
-                inArray(projects.id, projectIds)
+                inArray(projects.id, allProjectIds)
               )
             )
             .orderBy(desc(projects.createdAt));
@@ -201,7 +216,7 @@ const app = new Hono()
           projectList = await db
             .select()
             .from(projects)
-            .where(inArray(projects.id, projectIds))
+            .where(inArray(projects.id, allProjectIds))
             .orderBy(desc(projects.createdAt));
         }
       }
