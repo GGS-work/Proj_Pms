@@ -89,6 +89,10 @@ export const NotificationButton = () => {
         router.push("/bugs");
       }
       setOpen(false);
+    } else if (notification.type === "REQUIREMENT_ASSIGNED") {
+      // Navigate to summary page to view requirements
+      router.push("/summary");
+      setOpen(false);
     }
   };
 

@@ -28,7 +28,12 @@ export const ProjectsClient = () => {
     setIsModalOpen(true);
   };
 
-  // Check if user is admin
+  // Check if user can view requirements (Admin, PM, or Management)
+  const canViewRequirements = permissions.role === MemberRole.ADMIN || 
+                               permissions.role === MemberRole.PROJECT_MANAGER ||
+                               permissions.role === MemberRole.MANAGEMENT;
+
+  // Check if user is admin (for project creation)
   const isAdmin = permissions.role === MemberRole.ADMIN || permissions.role === MemberRole.PROJECT_MANAGER;
 
   const getStatusColor = (status: string) => {
@@ -61,10 +66,12 @@ export const ProjectsClient = () => {
             Manage and organize your projects ({projectList.length} total)
           </p>
         </div>
-        <Button onClick={open}>
-          <PlusIcon className="mr-2 h-4 w-4" />
-          New Project
-        </Button>
+        {isAdmin && (
+          <Button onClick={open}>
+            <PlusIcon className="mr-2 h-4 w-4" />
+            New Project
+          </Button>
+        )}
       </div>
 
       {projectList.length === 0 ? (
@@ -129,8 +136,8 @@ export const ProjectsClient = () => {
         </div>
       )}
 
-      {/* Requirements Section - Only visible to Admins */}
-      {isAdmin && (
+      {/* Requirements Section - Visible to Admins, PMs, and Management */}
+      {canViewRequirements && (
       <div className="mt-12">
         <div className="mb-6 flex items-center justify-between">
           <div>

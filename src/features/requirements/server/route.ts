@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { db } from "@/db";
-import { projectRequirements, users, members } from "@/db/schema";
+import { projectRequirements, users, members, notifications } from "@/db/schema";
 import { sessionMiddleware } from "@/lib/session-middleware";
 import { eq } from "drizzle-orm";
 import { MemberRole } from "@/features/members/types";
@@ -75,6 +75,19 @@ const app = new Hono()
           } as any)
           .returning();
 
+        // Create notification for the assigned Project Manager
+        await db.insert(notifications).values({
+          userId: data.projectManagerId,
+          title: "New Requirement Assigned",
+          message: `You have been assigned a new requirement: "${data.tentativeTitle}" from ${data.customer}`,
+          type: "REQUIREMENT_ASSIGNED",
+          metadata: {
+            requirementId: requirement.id,
+            customer: data.customer,
+            dueDate: data.dueDate,
+          },
+        });
+
         return c.json({ data: requirement });
       } catch (error: any) {
         console.error("Error creating requirement:", error);
@@ -84,6 +97,18 @@ const app = new Hono()
   )
   .get("/", sessionMiddleware, async (c) => {
     try {
+      const currentUser = c.get("user");
+
+      // Check if user is admin
+      const isAdmin = await isUserAdmin(currentUser.id);
+
+      // Filter requirements based on user role
+      // Admins see all requirements
+      // PMs see only requirements assigned to them
+      const whereCondition = isAdmin 
+        ? undefined 
+        : eq(projectRequirements.projectManagerId, currentUser.id);
+
       const requirements = await db
         .select({
           id: projectRequirements.id,
@@ -100,7 +125,8 @@ const app = new Hono()
           projectManagerName: users.name,
         })
         .from(projectRequirements)
-        .leftJoin(users, eq(projectRequirements.projectManagerId, users.id));
+        .leftJoin(users, eq(projectRequirements.projectManagerId, users.id))
+        .where(whereCondition);
 
       return c.json({ data: requirements });
     } catch (error: any) {

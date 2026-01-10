@@ -166,7 +166,7 @@ export default function AddRequirementsPage() {
       expectedOutputFiles: outputFiles,
     }, {
       onSuccess: () => {
-        router.push("/projects");
+        router.push("/summary");
       }
     });
   };
