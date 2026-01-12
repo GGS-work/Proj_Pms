@@ -94,13 +94,14 @@ const app = new Hono().post("/", sessionMiddleware, async (c) => {
       // Parse has_login_access (TRUE/FALSE, 1/0, true/false, yes/no)
       const hasLoginAccess = row.has_login_access !== undefined
         ? ['TRUE', '1', 'YES', 'Y', true, 1].includes(String(row.has_login_access).toUpperCase())
-        : true; // Default to true for backwards compatibility
+        : undefined;
       
-      // Basic required fields
-      if (!row.name || !row.email) {
+      // Required fields validation
+      if (!row.name || !row.email || row.has_login_access === undefined) {
         const missing = [];
         if (!row.name) missing.push('name');
         if (!row.email) missing.push('email');
+        if (row.has_login_access === undefined) missing.push('has_login_access');
         errors.push(`Row ${i + 2}: Missing required fields: ${missing.join(', ')}`);
         continue;
       }
@@ -123,9 +124,10 @@ const app = new Hono().post("/", sessionMiddleware, async (c) => {
           continue;
         }
         if (!row.role) {
-          errors.push(`Row ${i + 2}: Role required when has_login_access is TRUE (ADMIN, PROJECT_MANAGER, TEAM_LEAD, EMPLOYEE, MANAGEMENT)`);
+          errors.push(`Row ${i + 2}: Role required when has_login_access is TRUE. Use: ADMIN, PROJECT_MANAGER, TEAM_LEAD, EMPLOYEE, or MANAGEMENT`);
           continue;
         }
+        
         // Validate role
         const validRoles = [MemberRole.ADMIN, MemberRole.PROJECT_MANAGER, MemberRole.TEAM_LEAD, MemberRole.EMPLOYEE, MemberRole.MANAGEMENT];
         if (!validRoles.includes(row.role as MemberRole)) {
