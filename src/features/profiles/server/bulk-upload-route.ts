@@ -81,6 +81,15 @@ const app = new Hono().post("/", sessionMiddleware, async (c) => {
     for (let i = 0; i < jsonData.length; i++) {
       const row: any = jsonData[i];
       
+      // Trim all string fields to remove whitespace
+      if (row.name) row.name = row.name.toString().trim();
+      if (row.email) row.email = row.email.toString().trim();
+      if (row.password) row.password = row.password.toString().trim();
+      if (row.mobile_no) row.mobile_no = row.mobile_no.toString().trim();
+      if (row.native) row.native = row.native.toString().trim();
+      if (row.designation) row.designation = row.designation.toString().trim();
+      if (row.department) row.department = row.department.toString().trim();
+      
       // Skip empty rows
       if (!row.name || !row.email || !row.password) {
         const missing = [];
@@ -94,7 +103,7 @@ const app = new Hono().post("/", sessionMiddleware, async (c) => {
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(row.email)) {
-        errors.push(`Row ${i + 2}: Invalid email format: "${row.email}"`);
+        errors.push(`Row ${i + 2}: Invalid email format: "${row.email}" (length: ${row.email.length})`);
         continue;
       }
 
