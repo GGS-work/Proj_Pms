@@ -4,7 +4,9 @@ import { toast } from "sonner";
 interface CreateProfileProps {
   name: string;
   email: string;
-  password: string;
+  hasLoginAccess?: boolean;
+  password?: string;
+  role?: string;
   mobileNo?: string;
   native?: string;
   designation?: string;

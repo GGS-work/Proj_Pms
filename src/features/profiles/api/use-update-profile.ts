@@ -13,6 +13,9 @@ interface UpdateProfileProps {
   dateOfBirth?: string;
   dateOfJoining?: string;
   skills?: string[];
+  hasLoginAccess?: boolean;
+  password?: string;
+  role?: string;
 }
 
 export const useUpdateProfile = () => {

@@ -5,7 +5,7 @@ import { useGetProfiles } from "@/features/profiles/api/use-get-profiles";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader, Search, UserCog, Pencil, Trash2 } from "lucide-react";
+import { Loader, Search, UserCog, Pencil, Trash2, Key, Lock } from "lucide-react";
 import { EditProfileModal } from "@/features/profiles/components/edit-profile-modal";
 import { DeleteProfileDialog } from "@/features/profiles/components/delete-profile-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -25,6 +25,8 @@ interface Profile {
   dateOfBirth?: Date | null;
   dateOfJoining?: Date | null;
   skills?: string[] | null;
+  hasLoginAccess?: boolean;
+  role?: string | null;
 }
 
 export default function EditProfilePage() {
@@ -97,11 +99,22 @@ export default function EditProfilePage() {
                       </Avatar>
                       
                       <div className="flex-1 space-y-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold text-lg">{profile.name}</h3>
                           {profile.designation && (
                             <Badge variant="secondary" className="capitalize">
                               {profile.designation.replace(/_/g, " ")}
+                            </Badge>
+                          )}
+                          {profile.hasLoginAccess ? (
+                            <Badge variant="default" className="gap-1">
+                              <Key className="h-3 w-3" />
+                              Access: {profile.role?.replace(/_/g, " ") || "N/A"}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="gap-1">
+                              <Lock className="h-3 w-3" />
+                              No Login
                             </Badge>
                           )}
                         </div>
