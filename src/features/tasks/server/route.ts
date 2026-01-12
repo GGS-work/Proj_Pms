@@ -14,6 +14,52 @@ import { ActivityAction, EntityType } from "@/features/activity/types";
 import { createTaskSchema } from "../schemas";
 import { TaskStatus, TaskPriority, IssueType, Resolution } from "../types";
 
+/**
+ * Automatically add assignee to project if not already a member
+ * This ensures employees assigned to project tasks are automatically added to the project
+ */
+async function ensureAssigneeInProject(projectId: string, assigneeId: string): Promise<void> {
+  if (!projectId || !assigneeId) return;
+
+  try {
+    // Get the project
+    const [project] = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, projectId))
+      .limit(1);
+
+    if (!project) {
+      console.log(`⚠️ Project ${projectId} not found, skipping assignee addition`);
+      return;
+    }
+
+    // Check if assignees array exists and contains the user
+    const currentAssignees = (project.assignees || []) as string[];
+    
+    if (currentAssignees.includes(assigneeId)) {
+      console.log(`✅ Assignee ${assigneeId} already in project ${projectId}`);
+      return;
+    }
+
+    // Add the assignee to the project
+    const updatedAssignees = [...currentAssignees, assigneeId];
+    
+    await db
+      .update(projects)
+      .set({ 
+        assignees: updatedAssignees,
+        updatedAt: new Date()
+      })
+      .where(eq(projects.id, projectId));
+
+    console.log(`✅ Auto-added assignee ${assigneeId} to project ${projectId}. Total assignees: ${updatedAssignees.length}`);
+  } catch (error) {
+    console.error(`❌ Failed to add assignee to project:`, error);
+    // Don't throw - this is a nice-to-have feature, shouldn't block task creation
+  }
+}
+
 // Configure route for Vercel - increase body size limit for file uploads
 export const runtime = 'nodejs';
 export const maxDuration = 60; // Maximum execution time for Pro plan (10s for Hobby)
@@ -544,6 +590,11 @@ const app = new Hono()
 
       console.log(`✅ Task created: ID=${task.id}, IssueId=${task.issueId}, Status=${task.status}, AssigneeId=${task.assigneeId}, ProjectId=${task.projectId}, WorkspaceId=${task.workspaceId}, DueDate=${task.dueDate}`);
 
+      // Auto-add assignee to project if task has a project
+      if (task.projectId && task.assigneeId) {
+        await ensureAssigneeInProject(task.projectId, task.assigneeId);
+      }
+
       // Log task creation activity
       try {
         console.log(`📝 Logging task creation: ${task.summary}`);
@@ -635,6 +686,11 @@ const app = new Hono()
         })
         .where(eq(tasks.id, taskId))
         .returning();
+
+      // Auto-add new assignee to project if assignee changed and task has a project
+      if (updates.assigneeId && updates.assigneeId !== existingTask.assigneeId && task.projectId) {
+        await ensureAssigneeInProject(task.projectId, updates.assigneeId);
+      }
 
       // Log activity based on what changed
       const changes: Record<string, { before: any; after: any }> = {};
@@ -1706,6 +1762,14 @@ const app = new Hono()
               
               createdTasks.push(...insertedTasks);
               console.log(`✅ Inserted batch of ${taskDataBatch.length} tasks (total: ${createdTasks.length})`);
+              
+              // Auto-add assignees to projects for bulk imported tasks
+              for (const task of insertedTasks) {
+                if (task.projectId && task.assigneeId) {
+                  await ensureAssigneeInProject(task.projectId, task.assigneeId);
+                }
+              }
+              
               taskDataBatch.length = 0; // Clear batch
             } catch (error) {
               console.error(`❌ Error inserting batch at row ${i}:`, error);
@@ -1714,6 +1778,11 @@ const app = new Hono()
                 try {
                   const [newTask] = await db.insert(tasks).values(failedTask).returning();
                   createdTasks.push(newTask);
+                  
+                  // Auto-add assignee to project for fallback insertion
+                  if (newTask.projectId && newTask.assigneeId) {
+                    await ensureAssigneeInProject(newTask.projectId, newTask.assigneeId);
+                  }
                 } catch (singleError: any) {
                   // Check if it's a duplicate key error
                   if (singleError?.cause?.code === '23505' && singleError?.cause?.constraint_name === 'tasks_issue_id_unique') {

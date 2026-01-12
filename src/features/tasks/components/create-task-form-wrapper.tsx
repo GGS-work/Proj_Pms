@@ -33,6 +33,13 @@ export const CreateTaskFormWrapper = ({
     name: member.name,
   }));
 
+  console.log('[Create Task Form] Members data:', {
+    membersCount: members?.documents?.length || 0,
+    memberOptionsCount: memberOptions?.length || 0,
+    isLoadingMembers,
+    members: members?.documents
+  });
+
   const isLoading = isLoadingProjects || isLoadingMembers;
 
   if (isLoading) {
