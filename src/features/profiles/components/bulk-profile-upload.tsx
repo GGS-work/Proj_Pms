@@ -47,19 +47,19 @@ export const BulkProfileUpload = () => {
   const downloadTemplate = () => {
     // Create Excel template with proper formatting
     const headers = [
-      "Name",
-      "Email",
-      "Password",
-      "Mobile No",
-      "Native",
-      "Designation",
-      "Department",
-      "Experience (Years)",
-      "Date of Birth",
-      "Date of Joining",
-      "Skills",
-      "Has Login Access",
-      "Role"
+      "name",
+      "email",
+      "password",
+      "mobile_no",
+      "native",
+      "designation",
+      "department",
+      "experience",
+      "date_of_birth",
+      "date_of_joining",
+      "skills",
+      "has_login_access",
+      "role"
     ];
 
     const exampleRows = [
