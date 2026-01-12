@@ -56,7 +56,9 @@ export const BulkProfileUpload = () => {
       "experience",
       "date_of_birth",
       "date_of_joining",
-      "skills"
+      "skills",
+      "has_login_access",
+      "role"
     ];
 
     const exampleRows = [
@@ -67,13 +69,30 @@ export const BulkProfileUpload = () => {
         "+1234567890",
         "New York, USA",
         "senior_developer",
+        "engineering",
         "5",
         "1990-05-15",
         "2020-01-10",
-        "JavaScript,React,Node.js"
+        "JavaScript,React,Node.js",
+        "TRUE",
+        "EMPLOYEE"
       ],
-      // Empty rows for users to fill
-      Array(headers.length).fill(""),
+      [
+        "Jane Smith",
+        "jane.smith@example.com",
+        "",
+        "+1234567891",
+        "Los Angeles, USA",
+        "manager",
+        "hr",
+        "8",
+        "1988-03-20",
+        "2018-06-15",
+        "Management,Leadership",
+        "FALSE",
+        ""
+      ],
+      // Empty row for users to fill
       Array(headers.length).fill(""),
     ];
 
@@ -123,7 +142,9 @@ export const BulkProfileUpload = () => {
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">
               <li><strong>name</strong> - Full name (required)</li>
               <li><strong>email</strong> - Valid email address (required, must be unique)</li>
-              <li><strong>password</strong> - Minimum 6 characters (required)</li>
+              <li><strong>has_login_access</strong> - TRUE or FALSE (required) - whether employee can log in</li>
+              <li><strong>password</strong> - Minimum 6 characters (required only if has_login_access is TRUE)</li>
+              <li><strong>role</strong> - ADMIN, PROJECT_MANAGER, TEAM_LEAD, EMPLOYEE, or MANAGEMENT (required only if has_login_access is TRUE)</li>
             </ul>
           </div>
 
@@ -150,6 +171,8 @@ export const BulkProfileUpload = () => {
                 <li>Maximum 100 profiles per upload</li>
                 <li>Dates must be in YYYY-MM-DD format</li>
                 <li>Each email must be unique in the system</li>
+                <li>If has_login_access is FALSE, leave password and role empty</li>
+                <li>If has_login_access is TRUE, password and role are required</li>
                 <li>Empty optional fields will be left blank</li>
               </ul>
             </AlertDescription>
