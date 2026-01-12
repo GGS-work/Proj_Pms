@@ -9,6 +9,7 @@ import { Upload, Download, FileSpreadsheet, AlertCircle, CheckCircle2 } from "lu
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useBulkUploadProfiles } from "../api/use-bulk-upload-profiles";
 import { Progress } from "@/components/ui/progress";
+import * as XLSX from 'xlsx';
 
 export const BulkProfileUpload = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -44,21 +45,21 @@ export const BulkProfileUpload = () => {
   };
 
   const downloadTemplate = () => {
-    // Create CSV template with detailed examples
+    // Create Excel template with proper formatting
     const headers = [
-      "name",
-      "email",
-      "password",
-      "mobile_no",
-      "native",
-      "designation",
-      "department",
-      "experience",
-      "date_of_birth",
-      "date_of_joining",
-      "skills",
-      "has_login_access",
-      "role"
+      "Name",
+      "Email",
+      "Password",
+      "Mobile No",
+      "Native",
+      "Designation",
+      "Department",
+      "Experience (Years)",
+      "Date of Birth",
+      "Date of Joining",
+      "Skills",
+      "Has Login Access",
+      "Role"
     ];
 
     const exampleRows = [
@@ -92,25 +93,51 @@ export const BulkProfileUpload = () => {
         "FALSE",
         ""
       ],
-      // Empty row for users to fill
-      Array(headers.length).fill(""),
     ];
 
-    const csvContent = [
-      headers.join(","),
-      ...exampleRows.map(row => row.join(","))
-    ].join("\n");
+    // Create worksheet data
+    const wsData = [headers, ...exampleRows];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "profile_upload_template.csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 20 },  // Name
+      { wch: 30 },  // Email
+      { wch: 15 },  // Password
+      { wch: 15 },  // Mobile No
+      { wch: 20 },  // Native
+      { wch: 20 },  // Designation
+      { wch: 15 },  // Department
+      { wch: 18 },  // Experience
+      { wch: 15 },  // Date of Birth
+      { wch: 15 },  // Date of Joining
+      { wch: 30 },  // Skills
+      { wch: 18 },  // Has Login Access
+      { wch: 15 },  // Role
+    ];
+
+    // Style the header row (row 1)
+    const headerStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "4472C4" } },
+      alignment: { horizontal: "center", vertical: "center" }
+    };
+
+    // Apply header styling to each cell in the first row
+    headers.forEach((_, colIndex) => {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: colIndex });
+      if (!ws[cellAddress]) ws[cellAddress] = { t: 's', v: '' };
+      ws[cellAddress].s = headerStyle;
+    });
+
+    // Create workbook and add worksheet
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Employee Profiles");
+
+    // Generate Excel file
+    XLSX.writeFile(wb, "employee_profile_template.xlsx");
   };
+
 
   return (
     <div className="space-y-6">
