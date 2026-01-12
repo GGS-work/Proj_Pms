@@ -111,35 +111,37 @@ const app = new Hono()
       const user = c.get("user");
       const { workspaceId, forTaskAssignment } = c.req.valid("query");
 
+      // For task assignment, always return all users (regardless of role or workspace)
+      // This ensures all employees are available in the assignee dropdown
+      if (forTaskAssignment === "true") {
+        console.log(`📋 [Task Assignment] Fetching all users for assignee dropdown (requested by: ${user.name || user.email})`);
+        const membersList = await db
+          .select({
+            id: users.id,
+            userId: users.id,
+            workspaceId: users.id, // Placeholder for compatibility
+            role: users.id, // Placeholder
+            createdAt: users.createdAt,
+            updatedAt: users.updatedAt,
+            name: users.name,
+            email: users.email,
+          })
+          .from(users);
+
+        console.log(`✅ [Task Assignment] Returning ${membersList.length} users for assignee dropdown`);
+        return c.json({
+          data: {
+            documents: membersList,
+            total: membersList.length,
+          },
+        });
+      }
+
       // Check if user is admin
       const adminCheck = await isUserAdmin(user.id);
 
       // If no workspaceId provided
       if (!workspaceId) {
-        // For task assignment, always return all users (regardless of role)
-        if (forTaskAssignment === "true") {
-          console.log(`📋 [Task Assignment] Fetching all users for assignee dropdown`);
-          const membersList = await db
-            .select({
-              id: users.id,
-              userId: users.id,
-              workspaceId: users.id, // Placeholder for compatibility
-              role: users.id, // Placeholder
-              createdAt: users.createdAt,
-              updatedAt: users.updatedAt,
-              name: users.name,
-              email: users.email,
-            })
-            .from(users);
-
-          return c.json({
-            data: {
-              documents: membersList,
-              total: membersList.length,
-            },
-          });
-        }
-        
         if (adminCheck) {
           // Admins: Return all users
           const membersList = await db
