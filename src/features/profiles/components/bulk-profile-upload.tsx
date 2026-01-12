@@ -57,9 +57,7 @@ export const BulkProfileUpload = () => {
       "experience",
       "date_of_birth",
       "date_of_joining",
-      "skills",
-      "has_login_access",
-      "role"
+      "skills"
     ];
 
     const exampleRows = [
@@ -74,9 +72,20 @@ export const BulkProfileUpload = () => {
         "5",
         "1990-05-15",
         "2020-01-10",
-        "JavaScript,React,Node.js",
-        "TRUE",
-        "EMPLOYEE"
+        "JavaScript,React,Node.js"
+      ],
+      [
+        "Jane Smith",
+        "jane.smith@example.com",
+        "",
+        "+1234567891",
+        "Los Angeles, USA",
+        "manager",
+        "hr",
+        "8",
+        "1988-03-20",
+        "2018-06-15",
+        "Management,Leadership"
       ],
     ];
 
@@ -93,12 +102,10 @@ export const BulkProfileUpload = () => {
       { wch: 20 },  // Native
       { wch: 20 },  // Designation
       { wch: 15 },  // Department
-      { wch: 18 },  // Experience
+      { wch: 12 },  // Experience
       { wch: 15 },  // Date of Birth
       { wch: 15 },  // Date of Joining
       { wch: 30 },  // Skills
-      { wch: 18 },  // Has Login Access
-      { wch: 15 },  // Role
     ];
 
     // Style the header row (row 1)
@@ -154,15 +161,13 @@ export const BulkProfileUpload = () => {
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">
               <li><strong>name</strong> - Full name (required)</li>
               <li><strong>email</strong> - Valid email address (required, must be unique)</li>
-              <li><strong>has_login_access</strong> - TRUE or FALSE (required) - whether employee can log in</li>
-              <li><strong>password</strong> - Minimum 6 characters (required only if has_login_access is TRUE)</li>
-              <li><strong>role</strong> - ADMIN, PROJECT_MANAGER, TEAM_LEAD, EMPLOYEE, or MANAGEMENT (required only if has_login_access is TRUE)</li>
             </ul>
           </div>
 
           <div className="space-y-2">
             <h4 className="font-semibold">Optional Columns:</h4>
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+              <li><strong>password</strong> - Minimum 6 characters (leave empty for no login access, defaults to EMPLOYEE role)</li>
               <li><strong>mobile_no</strong> - Phone number</li>
               <li><strong>native</strong> - Native place/city</li>
               <li><strong>designation</strong> - intern, junior_developer, senior_developer, team_lead, manager, etc.</li>
@@ -183,8 +188,8 @@ export const BulkProfileUpload = () => {
                 <li>Maximum 100 profiles per upload</li>
                 <li>Dates must be in YYYY-MM-DD format</li>
                 <li>Each email must be unique in the system</li>
-                <li>If has_login_access is FALSE, leave password and role empty</li>
-                <li>If has_login_access is TRUE, password and role are required</li>
+                <li>If password is provided, employee can log in with EMPLOYEE role (admins can change role later)</li>
+                <li>If password is empty, employee profile is created without login access</li>
                 <li>Empty optional fields will be left blank</li>
               </ul>
             </AlertDescription>

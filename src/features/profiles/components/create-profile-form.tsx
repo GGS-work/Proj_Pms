@@ -36,16 +36,12 @@ import { useCreateDesignation } from "../api/use-create-designation";
 import { useGetDepartments } from "../api/use-get-departments";
 import { useCreateDepartment } from "../api/use-create-department";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { MemberRole } from "@/features/members/types";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  hasLoginAccess: z.boolean().default(false),
   password: z.string().optional(),
-  role: z.string().optional(),
   mobileNo: z.string().optional(),
   native: z.string().optional(),
   designation: z.string().optional(),
@@ -54,13 +50,13 @@ const profileSchema = z.object({
   dateOfBirth: z.date().optional(),
   dateOfJoining: z.date().optional(),
 }).refine((data) => {
-  // If login access is granted, password and role are required
-  if (data.hasLoginAccess) {
-    return data.password && data.password.length >= 6 && data.role;
+  // If password is provided, it must be at least 6 characters
+  if (data.password && data.password.length > 0) {
+    return data.password.length >= 6;
   }
   return true;
 }, {
-  message: "Password (min 6 characters) and role are required when granting login access",
+  message: "Password must be at least 6 characters",
   path: ["password"],
 });
 
@@ -76,7 +72,6 @@ export const CreateProfileForm = () => {
   const [newDesignation, setNewDesignation] = useState("");
   const [showAddDepartment, setShowAddDepartment] = useState(false);
   const [newDepartment, setNewDepartment] = useState("");
-  const [hasLoginAccess, setHasLoginAccess] = useState(false);
 
   const { data: customDesignations, isLoading: isLoadingDesignations } = useGetDesignations();
   const { mutate: createDesignation, isPending: isCreatingDesignation } = useCreateDesignation();
@@ -90,9 +85,7 @@ export const CreateProfileForm = () => {
     defaultValues: {
       name: "",
       email: "",
-      hasLoginAccess: false,
       password: "",
-      role: MemberRole.EMPLOYEE,
       mobileNo: "",
       native: "",
       designation: "",
@@ -108,7 +101,6 @@ export const CreateProfileForm = () => {
       setShowPassword(false);
       setDobOpen(false);
       setDojOpen(false);
-      setHasLoginAccess(false);
     },
   });
 
@@ -127,9 +119,7 @@ export const CreateProfileForm = () => {
     createProfile({
       name: values.name,
       email: values.email,
-      hasLoginAccess: values.hasLoginAccess,
-      password: values.hasLoginAccess ? values.password : undefined,
-      role: values.hasLoginAccess ? values.role : undefined,
+      password: values.password && values.password.length > 0 ? values.password : undefined,
       mobileNo: values.mobileNo,
       native: values.native,
       designation: values.designation,
@@ -207,118 +197,44 @@ export const CreateProfileForm = () => {
         </div>
 
         {/* Login Access Section */}
-        <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <label className="text-sm font-medium">Grant Login Access</label>
-              <p className="text-xs text-muted-foreground">
-                Enable this to allow the employee to log in to the system
-              </p>
-            </div>
-            <FormField
-              control={form.control}
-              name="hasLoginAccess"
-              render={({ field }) => (
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={(checked) => {
-                    field.onChange(checked);
-                    setHasLoginAccess(checked);
-                    if (!checked) {
-                      form.setValue("password", "");
-                      form.setValue("role", MemberRole.EMPLOYEE);
-                    }
-                  }}
-                />
-              )}
-            />
+        <div className="border rounded-lg p-4 space-y-2 bg-muted/30">
+          <div className="space-y-0.5">
+            <label className="text-sm font-medium">Login Credentials (Optional)</label>
+            <p className="text-xs text-muted-foreground">
+              Leave empty if employee doesn't need login access. Default role: Employee
+            </p>
           </div>
-
-          {hasLoginAccess && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password * (min 6 characters)</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          type={showPassword ? "text" : "password"} 
-                          placeholder="••••••" 
-                          {...field} 
-                          className="pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        >
-                          {showPassword ? (
-                            <EyeOff className="size-4" />
-                          ) : (
-                            <Eye className="size-4" />
-                          )}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>System Role *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={MemberRole.ADMIN}>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="destructive" className="text-xs">Admin</Badge>
-                            <span className="text-xs text-muted-foreground">Full system access</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value={MemberRole.PROJECT_MANAGER}>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="default" className="text-xs">Project Manager</Badge>
-                            <span className="text-xs text-muted-foreground">Manage projects & teams</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value={MemberRole.TEAM_LEAD}>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-xs">Team Lead</Badge>
-                            <span className="text-xs text-muted-foreground">Lead teams</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value={MemberRole.EMPLOYEE}>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">Employee</Badge>
-                            <span className="text-xs text-muted-foreground">Standard access</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value={MemberRole.MANAGEMENT}>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-xs">Management</Badge>
-                            <span className="text-xs text-muted-foreground">View-only access</span>
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          )}
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password (optional, min 6 characters)</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input 
+                      type={showPassword ? "text" : "password"} 
+                      placeholder="Leave empty for no login access" 
+                      {...field} 
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="size-4" />
+                      ) : (
+                        <Eye className="size-4" />
+                      )}
+                    </button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

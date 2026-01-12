@@ -89,19 +89,12 @@ const app = new Hono().post("/", sessionMiddleware, async (c) => {
       if (row.native) row.native = row.native.toString().trim();
       if (row.designation) row.designation = row.designation.toString().trim();
       if (row.department) row.department = row.department.toString().trim();
-      if (row.role) row.role = row.role.toString().trim().toUpperCase();
-      
-      // Parse has_login_access (TRUE/FALSE, 1/0, true/false, yes/no)
-      const hasLoginAccess = row.has_login_access !== undefined
-        ? ['TRUE', '1', 'YES', 'Y', true, 1].includes(String(row.has_login_access).toUpperCase())
-        : undefined;
       
       // Required fields validation
-      if (!row.name || !row.email || row.has_login_access === undefined) {
+      if (!row.name || !row.email) {
         const missing = [];
         if (!row.name) missing.push('name');
         if (!row.email) missing.push('email');
-        if (row.has_login_access === undefined) missing.push('has_login_access');
         errors.push(`Row ${i + 2}: Missing required fields: ${missing.join(', ')}`);
         continue;
       }
@@ -113,32 +106,15 @@ const app = new Hono().post("/", sessionMiddleware, async (c) => {
         continue;
       }
 
-      // If login access is enabled, validate password and role
-      if (hasLoginAccess) {
-        if (!row.password) {
-          errors.push(`Row ${i + 2}: Password required when has_login_access is TRUE`);
-          continue;
-        }
-        if (row.password.length < 6) {
-          errors.push(`Row ${i + 2}: Password must be at least 6 characters (current length: ${row.password.length})`);
-          continue;
-        }
-        if (!row.role) {
-          errors.push(`Row ${i + 2}: Role required when has_login_access is TRUE. Use: ADMIN, PROJECT_MANAGER, TEAM_LEAD, EMPLOYEE, or MANAGEMENT`);
-          continue;
-        }
-        
-        // Validate role
-        const validRoles = [MemberRole.ADMIN, MemberRole.PROJECT_MANAGER, MemberRole.TEAM_LEAD, MemberRole.EMPLOYEE, MemberRole.MANAGEMENT];
-        if (!validRoles.includes(row.role as MemberRole)) {
-          errors.push(`Row ${i + 2}: Invalid role "${row.role}". Must be one of: ${validRoles.join(', ')}`);
-          continue;
-        }
+      // If password is provided, validate length
+      if (row.password && row.password.length > 0 && row.password.length < 6) {
+        errors.push(`Row ${i + 2}: Password must be at least 6 characters (current length: ${row.password.length})`);
+        continue;
       }
 
       try {
-        // Hash password only if login access is enabled
-        const hashedPassword = hasLoginAccess && row.password 
+        // Hash password only if provided
+        const hashedPassword = row.password && row.password.length > 0
           ? await bcrypt.hash(row.password, 10) 
           : null;
 
@@ -186,11 +162,7 @@ const app = new Hono().post("/", sessionMiddleware, async (c) => {
           profileData.skills = skills;
         }
 
-        profiles.push({
-          ...profileData,
-          hasLoginAccess,
-          role: hasLoginAccess ? row.role : null,
-        });
+        profiles.push(profileData);
       } catch (error) {
         errors.push(`Row ${i + 2}: Error processing data`);
       }
@@ -251,28 +223,20 @@ const app = new Hono().post("/", sessionMiddleware, async (c) => {
 
     // Insert profiles in batch
     try {
-      // Separate profiles data (without hasLoginAccess/role) for users table
-      const userProfiles = newProfiles.map(p => {
-        const { hasLoginAccess, role, ...userData } = p;
-        return userData;
-      });
+      const insertedProfiles = await db.insert(users).values(newProfiles).returning();
 
-      const insertedProfiles = await db.insert(users).values(userProfiles).returning();
-
-      // Create memberships for users with login access
+      // Create memberships for users with passwords (login access), defaulting to EMPLOYEE role
       const [workspace] = await db.select().from(workspaces).limit(1);
       if (workspace) {
         const membershipsToCreate = [];
         
-        for (let i = 0; i < insertedProfiles.length; i++) {
-          const profile = newProfiles[i];
-          const insertedUser = insertedProfiles[i];
-          
-          if (profile.hasLoginAccess && profile.role) {
+        for (const insertedUser of insertedProfiles) {
+          // If user has a password, create membership with EMPLOYEE role
+          if (insertedUser.password) {
             membershipsToCreate.push({
               userId: insertedUser.id,
               workspaceId: workspace.id,
-              role: profile.role,
+              role: MemberRole.EMPLOYEE, // Default to EMPLOYEE
             });
           }
         }

@@ -37,7 +37,6 @@ const app = new Hono()
       z.object({
         name: z.string().min(2),
         email: z.string().email(),
-        hasLoginAccess: z.boolean().optional().default(true), // Backwards compatibility
         password: z.string().min(6).optional(),
         role: z.string().optional(),
         mobileNo: z.preprocess(val => val === '' ? undefined : val, z.string().optional()),
@@ -49,13 +48,13 @@ const app = new Hono()
         dateOfJoining: z.preprocess(val => val === '' ? undefined : val, z.string().optional()),
         skills: z.array(z.string()).optional(),
       }).refine((data) => {
-        // If hasLoginAccess is true or password is provided, both password and role are required
-        if (data.hasLoginAccess || data.password) {
-          return data.password && data.password.length >= 6;
+        // If password is provided, it must be at least 6 characters
+        if (data.password && data.password.length > 0) {
+          return data.password.length >= 6;
         }
         return true;
       }, {
-        message: "Password is required when granting login access",
+        message: "Password must be at least 6 characters",
         path: ["password"],
       })
     ),
@@ -84,12 +83,12 @@ const app = new Hono()
           dateOfJoining: data.dateOfJoining ? new Date(data.dateOfJoining) : null,
         };
 
-        // Only add password if login access is granted
-        if (data.hasLoginAccess && data.password) {
+        // Only add password if provided
+        if (data.password && data.password.length > 0) {
           const hashedPassword = await bcrypt.hash(data.password, 10);
           insertValues.password = hashedPassword;
         } else {
-          insertValues.password = null; // No login access - no password
+          insertValues.password = null; // No password - no login access
         }
 
         // Only add skills if provided and not empty
@@ -107,22 +106,22 @@ const app = new Hono()
           throw new Error("Failed to create user");
         }
 
-        // If login access is granted and role is provided, create membership
-        if (data.hasLoginAccess && data.role) {
+        // If password is provided, create membership with role (default to EMPLOYEE)
+        if (data.password && data.password.length > 0) {
           // Find any workspace (for now, use first available workspace)
-          // In a real scenario, you might want to specify which workspace
           const [workspace] = await db
             .select()
             .from(workspaces)
             .limit(1);
 
           if (workspace) {
+            const userRole = data.role || MemberRole.EMPLOYEE; // Default to EMPLOYEE
             await db
               .insert(members)
               .values({
                 userId: newUser.id,
                 workspaceId: workspace.id,
-                role: data.role,
+                role: userRole,
               });
           }
         }
@@ -345,7 +344,6 @@ const app = new Hono()
         dateOfBirth: z.preprocess(val => val === '' ? undefined : val, z.string().optional()),
         dateOfJoining: z.preprocess(val => val === '' ? undefined : val, z.string().optional()),
         skills: z.array(z.string()).optional(),
-        hasLoginAccess: z.boolean().optional(),
         password: z.string().min(6).optional(),
         role: z.string().optional(),
       }).refine((data) => {
@@ -390,49 +388,55 @@ const app = new Hono()
           updateValues.skills = data.skills.length > 0 ? data.skills : null;
         }
 
-        // Handle login access changes
-        if (data.hasLoginAccess !== undefined) {
-          if (data.hasLoginAccess) {
-            // Grant or update login access
-            if (data.password && data.password.length > 0) {
-              // Update password if provided
-              const hashedPassword = await bcrypt.hash(data.password, 10);
-              updateValues.password = hashedPassword;
-            }
+        // Handle password and role changes
+        if (data.password && data.password.length > 0) {
+          // Update password
+          const hashedPassword = await bcrypt.hash(data.password, 10);
+          updateValues.password = hashedPassword;
 
-            // Handle membership and role
-            if (data.role) {
-              const [workspace] = await db.select().from(workspaces).limit(1);
-              if (workspace) {
-                // Check if membership exists
-                const [existingMembership] = await db
-                  .select()
-                  .from(members)
-                  .where(eq(members.userId, userId))
-                  .limit(1);
+          // Handle membership and role (default to EMPLOYEE)
+          const userRole = data.role || MemberRole.EMPLOYEE;
+          const [workspace] = await db.select().from(workspaces).limit(1);
+          if (workspace) {
+            // Check if membership exists
+            const [existingMembership] = await db
+              .select()
+              .from(members)
+              .where(eq(members.userId, userId))
+              .limit(1);
 
-                if (existingMembership) {
-                  // Update role
-                  await db
-                    .update(members)
-                    .set({ role: data.role })
-                    .where(eq(members.userId, userId));
-                } else {
-                  // Create new membership
-                  await db.insert(members).values({
-                    userId,
-                    workspaceId: workspace.id,
-                    role: data.role,
-                  });
-                }
-              }
+            if (existingMembership) {
+              // Update role
+              await db
+                .update(members)
+                .set({ role: userRole })
+                .where(eq(members.userId, userId));
+            } else {
+              // Create new membership
+              await db.insert(members).values({
+                userId,
+                workspaceId: workspace.id,
+                role: userRole,
+              });
             }
-          } else {
-            // Revoke login access
-            updateValues.password = null;
-            
-            // Optionally delete membership when revoking access
-            await db.delete(members).where(eq(members.userId, userId));
+          }
+        } else if (data.role) {
+          // Update role only without changing password
+          const [workspace] = await db.select().from(workspaces).limit(1);
+          if (workspace) {
+            const [existingMembership] = await db
+              .select()
+              .from(members)
+              .where(eq(members.userId, userId))
+              .limit(1);
+
+            if (existingMembership) {
+              // Update role
+              await db
+                .update(members)
+                .set({ role: data.role })
+                .where(eq(members.userId, userId));
+            }
           }
         }
 
