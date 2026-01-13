@@ -4,7 +4,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { projectRequirements, users, members, notifications } from "@/db/schema";
 import { sessionMiddleware } from "@/lib/session-middleware";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { MemberRole } from "@/features/members/types";
 
 /**
@@ -127,20 +127,21 @@ const app = new Hono()
           projectManagerName: users.name,
         })
         .from(projectRequirements)
-        .leftJoin(users, eq(projectRequirements.projectManagerId, users.id));
+        .leftJoin(users, eq(projectRequirements.projectManagerId, users.id))
+        .orderBy(desc(projectRequirements.createdAt));
 
       // Filter requirements based on user role
       // Admins and Management see all requirements
-      // PMs see only requirements assigned to them
+      // PMs, Employees, and Team Leads see only requirements assigned to them
       let requirements;
       
       if (userRole === MemberRole.ADMIN || userRole === MemberRole.MANAGEMENT) {
         // Admins and Management see everything
         console.log('[Requirements GET] Fetching all requirements for admin/management');
         requirements = await query;
-      } else if (userRole === MemberRole.PROJECT_MANAGER) {
-        // PMs see only their assigned requirements
-        console.log('[Requirements GET] Fetching requirements for PM:', currentUser.id);
+      } else {
+        // PMs, Employees, and Team Leads see only their assigned requirements
+        console.log('[Requirements GET] Fetching requirements assigned to user:', currentUser.id);
         
         // First, get all requirements to debug
         const allRequirements = await query;
@@ -151,11 +152,8 @@ const app = new Hono()
           matches: r.projectManagerId === currentUser.id
         })));
         
+        // Filter to only show requirements assigned to this user
         requirements = allRequirements.filter(r => r.projectManagerId === currentUser.id);
-      } else {
-        // Employees and Team Leads see all requirements (read-only access)
-        console.log('[Requirements GET] Fetching all requirements for employee/team lead');
-        requirements = await query;
       }
 
       console.log('[Requirements GET] Found requirements:', requirements.length);
@@ -177,6 +175,7 @@ const app = new Hono()
           customer: projectRequirements.customer,
           projectManagerId: projectRequirements.projectManagerId,
           projectDescription: projectRequirements.projectDescription,
+          dueDate: projectRequirements.dueDate,
           sampleInputFiles: projectRequirements.sampleInputFiles,
           expectedOutputFiles: projectRequirements.expectedOutputFiles,
           status: projectRequirements.status,

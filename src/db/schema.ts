@@ -226,8 +226,8 @@ export const projectRequirements = pgTable('project_requirements', {
   projectManagerId: uuid('project_manager_id').references(() => users.id),
   projectDescription: text('project_description'),
   dueDate: timestamp('due_date'), // Due date for requirement
-  sampleInputFiles: jsonb('sample_input_files').$type<string[]>().default([]), // Array of file URLs/paths
-  expectedOutputFiles: jsonb('expected_output_files').$type<string[]>().default([]), // Array of file URLs/paths
+  sampleInputFiles: jsonb('sample_input_files').$type<Array<{ name: string; content: string }>>().default([]), // Array of file objects
+  expectedOutputFiles: jsonb('expected_output_files').$type<Array<{ name: string; content: string }>>().default([]), // Array of file objects
   status: text('status').notNull().default('PENDING'), // PENDING, APPROVED, REJECTED
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

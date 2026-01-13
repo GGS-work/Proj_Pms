@@ -28,9 +28,8 @@ export const ProjectsClient = () => {
     setIsModalOpen(true);
   };
 
-  // Check if user can view requirements (Only Admin and PM)
-  const canViewRequirements = permissions.role === MemberRole.ADMIN || 
-                               permissions.role === MemberRole.PROJECT_MANAGER;
+  // Check if user can view requirements (All users can view their assigned requirements)
+  const canViewRequirements = true; // Everyone can view their assigned requirements
 
   // Check if user is admin (for project creation and requirement addition)
   const isAdmin = permissions.role === MemberRole.ADMIN;
@@ -149,16 +148,16 @@ export const ProjectsClient = () => {
         </>
       )}
 
-      {/* Requirements Section - Visible to Admins, PMs, and Management */}
+      {/* Requirements Section - Visible to all users, showing only their assigned requirements */}
       {canViewRequirements && (
       <div className={isAdmin ? "mt-12" : ""}>
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">{isAdmin ? "Requirements" : "Summary"}</h2>
+            <h2 className="text-2xl font-bold">{isAdmin ? "Requirements" : "My Requirements"}</h2>
             <p className="text-muted-foreground">
               {isAdmin 
                 ? `Project requirements and submissions (${requirements?.length || 0} total)`
-                : `View project requirements and details (${requirements?.length || 0} total)`
+                : `Requirements assigned to you (${requirements?.length || 0} total)`
               }
             </p>
           </div>
@@ -238,16 +237,23 @@ export const ProjectsClient = () => {
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No requirements yet</h3>
+              <h3 className="text-lg font-semibold mb-2">No requirements assigned</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Add your first project requirement
+                {isAdmin 
+                  ? "Add your first project requirement"
+                  : "You don't have any requirements assigned yet"
+                }
               </p>
-              <Link href="/add-requirements">
-                <Button>
-                  <PlusIcon className="mr-2 h-4 w-4" />
-                  Add Requirement
-                </Button>
-              </Link>
+              {isAdmin && (
+                <Link href="/add-requirements">
+                  <Button>
+                    <PlusIcon className="mr-2 h-4 w-4" />
+                    Add Requirement
+                  </Button>
+                </Link>
+              )}
+            </CardContent>
+          </Card>
             </CardContent>
           </Card>
         )}
