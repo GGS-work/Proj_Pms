@@ -254,8 +254,6 @@ export const ProjectsClient = () => {
               )}
             </CardContent>
           </Card>
-            </CardContent>
-          </Card>
         )}
       </div>
       )}
