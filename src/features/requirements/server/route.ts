@@ -94,6 +94,11 @@ const app = new Hono()
     try {
       const currentUser = c.get("user");
 
+      console.log('[Requirements GET] Current user:', { 
+        id: currentUser.id, 
+        email: currentUser.email 
+      });
+
       // Get user's role
       const userMembership = await db
         .select({ role: members.role })
@@ -103,24 +108,10 @@ const app = new Hono()
 
       const userRole = userMembership.length > 0 ? userMembership[0].role : null;
 
-      // Filter requirements based on user role
-      // Admins and Management see all requirements
-      // PMs see only requirements assigned to them
-      // Employees and Team Leads see all requirements (read-only)
-      let whereCondition;
-      
-      if (userRole === MemberRole.ADMIN || userRole === MemberRole.MANAGEMENT) {
-        // Admins and Management see everything
-        whereCondition = undefined;
-      } else if (userRole === MemberRole.PROJECT_MANAGER) {
-        // PMs see only their assigned requirements
-        whereCondition = eq(projectRequirements.projectManagerId, currentUser.id);
-      } else {
-        // Employees and Team Leads see all requirements (read-only access)
-        whereCondition = undefined;
-      }
+      console.log('[Requirements GET] User role:', userRole);
 
-      const requirements = await db
+      // Build query based on user role
+      let query = db
         .select({
           id: projectRequirements.id,
           tentativeTitle: projectRequirements.tentativeTitle,
@@ -136,8 +127,28 @@ const app = new Hono()
           projectManagerName: users.name,
         })
         .from(projectRequirements)
-        .leftJoin(users, eq(projectRequirements.projectManagerId, users.id))
-        .where(whereCondition);
+        .leftJoin(users, eq(projectRequirements.projectManagerId, users.id));
+
+      // Filter requirements based on user role
+      // Admins and Management see all requirements
+      // PMs see only requirements assigned to them
+      let requirements;
+      
+      if (userRole === MemberRole.ADMIN || userRole === MemberRole.MANAGEMENT) {
+        // Admins and Management see everything
+        console.log('[Requirements GET] Fetching all requirements for admin/management');
+        requirements = await query;
+      } else if (userRole === MemberRole.PROJECT_MANAGER) {
+        // PMs see only their assigned requirements
+        console.log('[Requirements GET] Fetching requirements for PM:', currentUser.id);
+        requirements = await query.where(eq(projectRequirements.projectManagerId, currentUser.id));
+      } else {
+        // Employees and Team Leads see all requirements (read-only access)
+        console.log('[Requirements GET] Fetching all requirements for employee/team lead');
+        requirements = await query;
+      }
+
+      console.log('[Requirements GET] Found requirements:', requirements.length);
 
       return c.json({ data: requirements });
     } catch (error: any) {
