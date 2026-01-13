@@ -141,7 +141,17 @@ const app = new Hono()
       } else if (userRole === MemberRole.PROJECT_MANAGER) {
         // PMs see only their assigned requirements
         console.log('[Requirements GET] Fetching requirements for PM:', currentUser.id);
-        requirements = await query.where(eq(projectRequirements.projectManagerId, currentUser.id));
+        
+        // First, get all requirements to debug
+        const allRequirements = await query;
+        console.log('[Requirements GET] All requirements:', allRequirements.map(r => ({
+          id: r.id,
+          title: r.tentativeTitle,
+          projectManagerId: r.projectManagerId,
+          matches: r.projectManagerId === currentUser.id
+        })));
+        
+        requirements = allRequirements.filter(r => r.projectManagerId === currentUser.id);
       } else {
         // Employees and Team Leads see all requirements (read-only access)
         console.log('[Requirements GET] Fetching all requirements for employee/team lead');
