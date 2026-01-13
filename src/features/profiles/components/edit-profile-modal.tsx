@@ -35,6 +35,8 @@ import { useGetProfile } from "../api/use-get-profile";
 import { useUpdateProfile } from "../api/use-update-profile";
 import { useGetDesignations } from "../api/use-get-designations";
 import { useCreateDesignation } from "../api/use-create-designation";
+import { useGetDepartments } from "../api/use-get-departments";
+import { useCreateDepartment } from "../api/use-create-department";
 import { Dialog as AddDialog, DialogContent as AddDialogContent, DialogHeader as AddDialogHeader, DialogTitle as AddDialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { MemberRole } from "@/features/members/types";
@@ -75,12 +77,16 @@ export const EditProfileModal = ({ userId, open, onOpenChange }: EditProfileModa
   const { mutate: updateProfile, isPending } = useUpdateProfile();
   const { data: customDesignations } = useGetDesignations();
   const { mutate: createDesignation, isPending: isCreatingDesignation } = useCreateDesignation();
+  const { data: customDepartments } = useGetDepartments();
+  const { mutate: createDepartment, isPending: isCreatingDepartment } = useCreateDepartment();
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
   const [dobOpen, setDobOpen] = useState(false);
   const [dojOpen, setDojOpen] = useState(false);
   const [showAddDesignation, setShowAddDesignation] = useState(false);
   const [newDesignation, setNewDesignation] = useState("");
+  const [showAddDepartment, setShowAddDepartment] = useState(false);
+  const [newDepartment, setNewDepartment] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<ProfileFormValues>({
@@ -163,6 +169,22 @@ export const EditProfileModal = ({ userId, open, onOpenChange }: EditProfileModa
             form.setValue("designation", designationName);
             setNewDesignation("");
             setShowAddDesignation(false);
+          },
+        }
+      );
+    }
+  };
+
+  const handleAddDepartment = () => {
+    if (newDepartment.trim()) {
+      createDepartment(
+        { name: newDepartment.trim() },
+        {
+          onSuccess: (data) => {
+            const departmentName = newDepartment.trim();
+            form.setValue("department", departmentName);
+            setNewDepartment("");
+            setShowAddDepartment(false);
           },
         }
       );
@@ -375,7 +397,19 @@ export const EditProfileModal = ({ userId, open, onOpenChange }: EditProfileModa
                   name="department"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Department</FormLabel>
+                      <FormLabel className="flex items-center justify-between">
+                        <span>Department</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowAddDepartment(true)}
+                          className="h-6 px-2 text-xs"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Add New
+                        </Button>
+                      </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -390,6 +424,11 @@ export const EditProfileModal = ({ userId, open, onOpenChange }: EditProfileModa
                           <SelectItem value="sales">Sales</SelectItem>
                           <SelectItem value="hr">HR</SelectItem>
                           <SelectItem value="finance">Finance</SelectItem>
+                          {customDepartments?.map((department) => (
+                            <SelectItem key={department.id} value={department.name}>
+                              {department.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -613,6 +652,50 @@ export const EditProfileModal = ({ userId, open, onOpenChange }: EditProfileModa
               disabled={!newDesignation.trim() || isCreatingDesignation}
             >
               {isCreatingDesignation ? "Adding..." : "Add Designation"}
+            </Button>
+          </DialogFooter>
+        </AddDialogContent>
+      </AddDialog>
+
+      {/* Add Department Dialog */}
+      <AddDialog open={showAddDepartment} onOpenChange={setShowAddDepartment}>
+        <AddDialogContent>
+          <AddDialogHeader>
+            <AddDialogTitle>Add New Department</AddDialogTitle>
+          </AddDialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Department Name</label>
+              <Input
+                placeholder="Enter department name"
+                value={newDepartment}
+                onChange={(e) => setNewDepartment(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddDepartment();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setNewDepartment("");
+                setShowAddDepartment(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleAddDepartment}
+              disabled={!newDepartment.trim() || isCreatingDepartment}
+            >
+              {isCreatingDepartment ? "Adding..." : "Add Department"}
             </Button>
           </DialogFooter>
         </AddDialogContent>
