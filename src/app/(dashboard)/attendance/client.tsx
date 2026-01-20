@@ -19,7 +19,7 @@ const AttendanceClient = () => {
           <div>
             <h1 className="text-3xl font-bold">Attendance</h1>
             <p className="text-muted-foreground">
-              Track your work hours and daily tasks across all projects
+              Track your work hours and daily tasks across all project
             </p>
           </div>
         </div>
