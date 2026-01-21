@@ -157,8 +157,31 @@ export function TaskDetailsDrawer({ task, open, onOpenChange }: TaskDetailsDrawe
 
   const handleCopyToClipboard = async () => {
     try {
-      // Copy task ID to clipboard
-      await navigator.clipboard.writeText(task.issueId || task.id);
+      // Get assignee name
+      const assignee = members?.documents.find((m: any) => m.userId === task.assigneeId);
+      const assigneeName = assignee?.name || 'Unassigned';
+      
+      // Format task data for Excel (tab-separated)
+      const taskData = [
+        `Task ID:\t${task.issueId || task.id}`,
+        `Summary:\t${task.summary || ''}`,
+        `Description:\t${task.description || 'No description'}`,
+        `Status:\t${task.status || ''}`,
+        `Priority:\t${task.priority || ''}`,
+        `Assignee:\t${assigneeName}`,
+        `Issue Type:\t${task.issueType || ''}`,
+        `Due Date:\t${task.dueDate ? format(new Date(task.dueDate), 'MMM dd, yyyy') : 'Not set'}`,
+        `Estimated Hours:\t${task.estimatedHours || 'Not set'}`,
+        `Actual Hours:\t${task.actualHours || 'Not set'}`,
+        `Labels:\t${task.labels?.join(', ') || 'None'}`,
+        `Resolution:\t${task.resolution || 'Unresolved'}`,
+        `Project:\t${task.projectId || 'No project'}`,
+        `Created:\t${format(new Date(task.created), 'MMM dd, yyyy HH:mm')}`,
+        `Updated:\t${format(new Date(task.updated), 'MMM dd, yyyy HH:mm')}`,
+      ].join('\n');
+      
+      // Copy to clipboard
+      await navigator.clipboard.writeText(taskData);
       setIsCopied(true);
       
       // Reset after 2 seconds
@@ -233,7 +256,7 @@ export function TaskDetailsDrawer({ task, open, onOpenChange }: TaskDetailsDrawe
                       size="sm"
                       onClick={handleCopyToClipboard}
                       className="h-6 px-2 text-xs hover:bg-muted"
-                      title="Copy task ID to clipboard"
+                      title="Copy all task details to clipboard"
                     >
                       {isCopied ? (
                         <>
@@ -243,7 +266,7 @@ export function TaskDetailsDrawer({ task, open, onOpenChange }: TaskDetailsDrawe
                       ) : (
                         <>
                           <Copy className="h-3 w-3 mr-1" />
-                          Copy to Clipboard
+                          Copy Task Details
                         </>
                       )}
                     </Button>
