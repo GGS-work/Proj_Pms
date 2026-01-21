@@ -165,8 +165,17 @@ export const ProjectsClient = () => {
                           e.preventDefault();
                           e.stopPropagation();
                           const wsId = project.workspaceId || fallbackWorkspaceId;
+                          const navigateUrl = `/workspaces/${wsId}/projects/${project.id}/settings`;
+                          console.log('[Edit Button] Navigate:', { 
+                            projectId: project.id,
+                            workspaceId: project.workspaceId, 
+                            fallbackWorkspaceId, 
+                            finalWsId: wsId,
+                            url: navigateUrl
+                          });
+                          
                           if (wsId && project.id) {
-                            router.push(`/workspaces/${wsId}/projects/${project.id}/settings`);
+                            router.push(navigateUrl);
                           } else {
                             console.error('Missing workspaceId or projectId:', { 
                               workspaceId: project.workspaceId, 

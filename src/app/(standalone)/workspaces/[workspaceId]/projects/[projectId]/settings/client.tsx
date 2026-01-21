@@ -19,12 +19,20 @@ export const ProjectIdSettingsClient = () => {
   const { canManageUsers } = usePermissionContext();
   const [activeTab, setActiveTab] = useState("general");
 
+  // Debug logging
+  console.log('[ProjectSettings] State:', { projectId, workspaceId, isLoading, hasData: !!initialValues });
+
+  // Check for invalid projectId
+  if (!projectId || projectId === "undefined") {
+    return <PageError message="Invalid project ID. Please navigate from the projects list." />;
+  }
+
   if (isLoading) {
     return <PageLoader />;
   }
 
   if (!initialValues) {
-    return <PageError message="Project not found." />;
+    return <PageError message="Project not found. It may have been deleted or you don't have access." />;
   }
 
   return (
