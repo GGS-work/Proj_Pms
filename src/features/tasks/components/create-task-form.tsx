@@ -605,7 +605,7 @@ export const CreateTaskForm = ({
                     name="summary"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Summary</FormLabel>
+                        <FormLabel>Task Name</FormLabel>
                         <FormControl>
                           <Input placeholder="Enter task summary" {...field} />
                         </FormControl>

@@ -26,9 +26,9 @@ import { useGetWorkspaceAnalytics } from "@/features/workspaces/api/use-get-work
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 
 import { formatDistanceToNow } from "date-fns";
-import { CalendarIcon, PlusIcon, SettingsIcon } from "lucide-react";
+import { CalendarIcon, PlusIcon, SettingsIcon, PencilIcon } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 export const WorkspaceIdClient = () => {
   const workspaceId = useWorkspaceId();
@@ -187,6 +187,7 @@ export const ProjectList = ({ data, total }: ProjectListProps) => {
   const workspaceId = useWorkspaceId();
   const { open: createProject } = useCreateProjectModal();
   const permissions = usePermissionContext();
+  const router = useRouter();
 
   return (
     <div className="flex flex-col gap-y-4 col-span-1">
@@ -205,7 +206,7 @@ export const ProjectList = ({ data, total }: ProjectListProps) => {
         <DottedSeparator className="my-4" />
         <ul className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {data.map((project) => (
-            <li key={project.id}>
+            <li key={project.id} className="relative group">
               <Link href={`/workspaces/${workspaceId}/projects/${project.id}`}>
                 <Card className="shadow-none rounded-lg hover:opacity-75 transition">
                   <CardContent className="flex items-center gap-x-2.5 p-4">
@@ -221,6 +222,24 @@ export const ProjectList = ({ data, total }: ProjectListProps) => {
                   </CardContent>
                 </Card>
               </Link>
+              {/* Edit button appears on hover */}
+              {permissions.canEditProject && (
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      router.push(`/workspaces/${workspaceId}/projects/${project.id}/settings`);
+                    }}
+                    className="h-8 px-2"
+                  >
+                    <PencilIcon className="h-3 w-3 mr-1" />
+                    Edit
+                  </Button>
+                </div>
+              )}
             </li>
           ))}
           <li className="text-sm text-muted-foreground text-center hidden first-of-type:block">

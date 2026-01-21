@@ -8,8 +8,9 @@ import { useCreateProjectModal } from "@/features/projects/hooks/use-create-proj
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PlusIcon, FolderKanban, FileText, Calendar, User } from "lucide-react";
+import { PlusIcon, FolderKanban, FileText, Calendar, User, PencilIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { RequirementDetailsModal } from "@/features/requirements/components/requirement-details-modal";
 import { usePermissionContext } from "@/components/providers/permission-provider";
@@ -20,6 +21,7 @@ export const ProjectsClient = () => {
   const { data: requirements, isLoading: isLoadingRequirements } = useGetRequirements();
   const { open } = useCreateProjectModal();
   const permissions = usePermissionContext();
+  const router = useRouter();
   const [selectedRequirement, setSelectedRequirement] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -101,8 +103,8 @@ export const ProjectsClient = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {projectList.map((project) => (
-                <Link key={project.id} href={`/tasks?projectId=${project.id}`}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+                <Card key={project.id} className="hover:shadow-md transition-shadow cursor-pointer h-full group relative">
+                  <Link href={`/tasks?projectId=${project.id}`} className="block">
                     <CardHeader>
                       <div className="flex items-start gap-3">
                         <ProjectAvatar
@@ -140,8 +142,24 @@ export const ProjectsClient = () => {
                         )}
                       </div>
                     </CardContent>
-                  </Card>
-                </Link>
+                  </Link>
+                  {/* Edit button appears on hover */}
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        router.push(`/workspaces/${project.workspaceId}/projects/${project.id}/settings`);
+                      }}
+                      className="h-8 px-2"
+                    >
+                      <PencilIcon className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
+                  </div>
+                </Card>
               ))}
             </div>
           )}
