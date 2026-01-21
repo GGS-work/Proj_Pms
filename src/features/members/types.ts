@@ -1,11 +1,11 @@
 export enum MemberRole {
   ADMIN = "ADMIN",
+  MEMBER = "MEMBER",
+  PROJECT_MANAGER = "PROJECT_MANAGER",
+  TEAM_LEAD = "TEAM_LEAD",
   EMPLOYEE = "EMPLOYEE",
-  // MEMBER = "MEMBER", // Reserved for future use
-  // PROJECT_MANAGER = "PROJECT_MANAGER", // Reserved for future use
-  // TEAM_LEAD = "TEAM_LEAD", // Reserved for future use
-  // MANAGEMENT = "MANAGEMENT", // Reserved for future use
-  // CLIENT = "CLIENT", // View-only access to specific project - Reserved for future use
+  MANAGEMENT = "MANAGEMENT",
+  CLIENT = "CLIENT", // View-only access to specific project
 }
 
 export type Member = {
