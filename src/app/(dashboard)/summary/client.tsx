@@ -107,7 +107,14 @@ export const ProjectsClient = () => {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {projectList.map((project) => (
+              {projectList.map((project) => {
+                // Skip projects without valid ID
+                if (!project.id) {
+                  console.warn('Project missing ID:', project);
+                  return null;
+                }
+                
+                return (
                 <Card key={project.id} className="hover:shadow-md transition-shadow cursor-pointer h-full group relative">
                   <Link href={`/tasks?projectId=${project.id}`} className="block">
                     <CardHeader>
@@ -177,7 +184,8 @@ export const ProjectsClient = () => {
                     </div>
                   )}
                 </Card>
-              ))}
+                );
+              })}
             </div>
           )}
         </>

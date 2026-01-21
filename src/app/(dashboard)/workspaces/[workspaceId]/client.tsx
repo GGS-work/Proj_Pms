@@ -205,7 +205,14 @@ export const ProjectList = ({ data, total }: ProjectListProps) => {
         </div>
         <DottedSeparator className="my-4" />
         <ul className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {data.map((project) => (
+          {data.map((project) => {
+            // Skip projects without valid ID
+            if (!project.id) {
+              console.warn('Project missing ID:', project);
+              return null;
+            }
+            
+            return (
             <li key={project.id} className="relative group">
               <Link href={`/workspaces/${workspaceId}/projects/${project.id}`}>
                 <Card className="shadow-none rounded-lg hover:opacity-75 transition">
@@ -245,7 +252,8 @@ export const ProjectList = ({ data, total }: ProjectListProps) => {
                 </div>
               )}
             </li>
-          ))}
+            );
+          })}
           <li className="text-sm text-muted-foreground text-center hidden first-of-type:block">
             No projects found
           </li>
