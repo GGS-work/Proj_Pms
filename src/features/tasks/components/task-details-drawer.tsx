@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
-import { User, Calendar, Tag, Flag, Clock, Plus, CheckCircle2, Circle, Activity, UserCircle, FileText } from "lucide-react";
+import { User, Calendar, Tag, Flag, Clock, Plus, CheckCircle2, Circle, Activity, UserCircle, FileText, Copy, Check } from "lucide-react";
 import { format } from "date-fns";
 import { useCreateTask } from "../api/use-create-task";
 import { useUpdateTask } from "../api/use-update-task";
@@ -48,6 +48,7 @@ export function TaskDetailsDrawer({ task, open, onOpenChange }: TaskDetailsDrawe
   const [summaryValue, setSummaryValue] = useState("");
   const [editingCustomField, setEditingCustomField] = useState<string | null>(null);
   const [customFieldValue, setCustomFieldValue] = useState("");
+  const [isCopied, setIsCopied] = useState(false);
 
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
@@ -154,6 +155,21 @@ export function TaskDetailsDrawer({ task, open, onOpenChange }: TaskDetailsDrawe
     ? Math.round((subtasks.filter(s => s.status === "Done").length / subtasks.length) * 100) 
     : 0;
 
+  const handleCopyToClipboard = async () => {
+    try {
+      // Copy task ID to clipboard
+      await navigator.clipboard.writeText(task.issueId || task.id);
+      setIsCopied(true);
+      
+      // Reset after 2 seconds
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
@@ -212,6 +228,25 @@ export function TaskDetailsDrawer({ task, open, onOpenChange }: TaskDetailsDrawe
                     <span className="text-sm font-mono text-blue-600 dark:text-blue-400">
                       {task.issueId}
                     </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCopyToClipboard}
+                      className="h-6 px-2 text-xs hover:bg-muted"
+                      title="Copy task ID to clipboard"
+                    >
+                      {isCopied ? (
+                        <>
+                          <Check className="h-3 w-3 mr-1" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3 w-3 mr-1" />
+                          Copy to Clipboard
+                        </>
+                      )}
+                    </Button>
                   </div>
                   {isAdmin && isEditingSummary ? (
                     <div className="space-y-2">
