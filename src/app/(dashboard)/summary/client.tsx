@@ -144,7 +144,7 @@ export const ProjectsClient = () => {
                     </CardContent>
                   </Link>
                   {/* Edit button appears on hover */}
-                  {project.workspaceId && project.id && (
+                  {project.id && (
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         size="sm"
@@ -152,7 +152,11 @@ export const ProjectsClient = () => {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          router.push(`/workspaces/${project.workspaceId}/projects/${project.id}/settings`);
+                          if (project.workspaceId && project.id) {
+                            router.push(`/workspaces/${project.workspaceId}/projects/${project.id}/settings`);
+                          } else {
+                            console.error('Missing workspaceId or projectId:', { workspaceId: project.workspaceId, projectId: project.id });
+                          }
                         }}
                         className="h-8 px-2"
                       >

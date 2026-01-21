@@ -223,7 +223,7 @@ export const ProjectList = ({ data, total }: ProjectListProps) => {
                 </Card>
               </Link>
               {/* Edit button appears on hover */}
-              {permissions.canEditProject && project.id && workspaceId && (
+              {permissions.canEditProject && project.id && (
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                   <Button
                     size="sm"
@@ -231,7 +231,11 @@ export const ProjectList = ({ data, total }: ProjectListProps) => {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      router.push(`/workspaces/${workspaceId}/projects/${project.id}/settings`);
+                      if (workspaceId && project.id) {
+                        router.push(`/workspaces/${workspaceId}/projects/${project.id}/settings`);
+                      } else {
+                        console.error('Missing workspaceId or projectId:', { workspaceId, projectId: project.id });
+                      }
                     }}
                     className="h-8 px-2"
                   >
