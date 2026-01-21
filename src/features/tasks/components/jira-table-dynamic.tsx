@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, memo, useEffect } from "react";
-import { ChevronDown, ChevronRight, Plus, MoreVertical, Eye, EyeOff, Trash2, Settings, Edit } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, MoreVertical, Eye, EyeOff, Trash2, Settings, Edit, Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -71,6 +71,7 @@ export function JiraTableDynamic({ data, workspaceId, onAddSubtask, canCreateTas
   const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
   const [creatingSubtaskForId, setCreatingSubtaskForId] = useState<string | null>(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [isCopied, setIsCopied] = useState(false);
   
   // Extract projectId from the first task (all tasks in this view belong to the same project)
   const projectId = data?.[0]?.projectId;
@@ -306,6 +307,50 @@ export function JiraTableDynamic({ data, workspaceId, onAddSubtask, canCreateTas
     if (firstTask) {
       setSelectedTask(firstTask);
       setIsDrawerOpen(true);
+    }
+  };
+
+  const handleBulkCopy = async () => {
+    if (selectedTaskIds.size === 0) return;
+
+    try {
+      // Get all selected tasks
+      const selectedTasks = data.filter(t => selectedTaskIds.has(t.id));
+      
+      // Create tab-separated header row
+      const headers = ['Task ID', 'Summary', 'Status', 'Priority', 'Assignee', 'Issue Type', 'Due Date', 'Labels', 'Project'].join('\t');
+      
+      // Create data rows
+      const rows = selectedTasks.map(task => {
+        const assignee = members?.documents.find((m: any) => m.userId === task.assigneeId);
+        const assigneeName = assignee?.name || 'Unassigned';
+        
+        return [
+          task.issueId || task.id,
+          task.summary || '',
+          task.status || '',
+          task.priority || '',
+          assigneeName,
+          task.issueType || '',
+          task.dueDate ? format(new Date(task.dueDate), 'MMM dd, yyyy') : 'Not set',
+          task.labels?.join(', ') || 'None',
+          task.projectName || 'No project'
+        ].join('\t');
+      });
+      
+      // Combine headers and rows
+      const clipboardData = [headers, ...rows].join('\n');
+      
+      // Copy to clipboard
+      await navigator.clipboard.writeText(clipboardData);
+      setIsCopied(true);
+      
+      // Reset after 2 seconds
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
     }
   };
 
@@ -897,15 +942,38 @@ export function JiraTableDynamic({ data, workspaceId, onAddSubtask, canCreateTas
             </span>
           </div>
           <div className="flex items-center gap-2">
+            {/* Show Edit only for single selection */}
+            {selectedTaskIds.size === 1 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBulkEdit}
+                className="gap-2"
+              >
+                <Edit className="h-4 w-4" />
+                Edit
+              </Button>
+            )}
+            {/* Show Copy for all selections */}
             <Button
               variant="outline"
               size="sm"
-              onClick={handleBulkEdit}
+              onClick={handleBulkCopy}
               className="gap-2"
             >
-              <Edit className="h-4 w-4" />
-              Edit
+              {isCopied ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copy to Clipboard
+                </>
+              )}
             </Button>
+            {/* Show Delete for all selections */}
             <Button
               variant="destructive"
               size="sm"
