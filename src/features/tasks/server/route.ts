@@ -246,7 +246,17 @@ const app = new Hono()
       }
 
       if (dueDate) {
-        conditions.push(eq(tasks.dueDate, new Date(dueDate)));
+        // Compare only the date part, ignoring time
+        const selectedDate = new Date(dueDate);
+        const startOfDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 0, 0, 0, 0);
+        const endOfDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59, 999);
+        
+        conditions.push(
+          and(
+            gte(tasks.dueDate, startOfDay),
+            lte(tasks.dueDate, endOfDay)
+          )
+        );
       }
 
       // Month filter
