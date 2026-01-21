@@ -1,4 +1,4 @@
-import { FolderIcon, ListChecksIcon, UserIcon, CalendarIcon, CalendarRangeIcon, FilterIcon } from "lucide-react";
+import { FolderIcon, ListChecksIcon, UserIcon, CalendarIcon, CalendarRangeIcon, FilterIcon, XIcon } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 
 import { useGetMembers } from "@/features/members/api/use-get-members";
@@ -8,6 +8,7 @@ import { useIsGlobalAdmin } from "@/features/members/api/use-get-user-role";
 // import { useGetCustomFieldDefinitions, useGetIssueTypes } from "../api/use-get-custom-fields";
 
 import { DatePicker } from "@/components/date-picker";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -84,10 +85,45 @@ export const DynamicDataFilters = ({ hideProjectFilter }: DynamicDataFiltersProp
     }
   };
 
+  const hasActiveFilters = Object.values(filters).some((v) => v !== null);
+
+  const onClearFilters = () => {
+    // Clear all filters by setting all values to null
+    const clearedFilters = Object.keys(filters).reduce((acc, key) => {
+      acc[key] = null;
+      return acc;
+    }, {} as any);
+    setFilters(clearedFilters);
+  };
+
   if (isLoading) return null;
 
   return (
     <div className="flex flex-col lg:flex-row gap-2 flex-wrap">
+      {/* Project Filter - MOVED TO FIRST */}
+      {!hideProjectFilter && (
+        <Select
+          defaultValue={(filters as any).projectId ?? undefined}
+          onValueChange={(value) => onFilterChange("projectId", value)}
+        >
+          <SelectTrigger className="w-full lg:w-auto h-8">
+            <div className="flex items-center pr-2">
+              <FolderIcon className="size-4 mr-2" />
+              <SelectValue placeholder="Select project" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All projects</SelectItem>
+            <SelectSeparator />
+            {projectOptions?.map((project) => (
+              <SelectItem key={project.value} value={project.value}>
+                {project.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
       {/* Issue Type Filter (Dynamic from DB) */}
       {issueTypeOptions && issueTypeOptions.length > 0 && (
         <Select
@@ -321,6 +357,19 @@ export const DynamicDataFilters = ({ hideProjectFilter }: DynamicDataFiltersProp
           <FilterIcon className="size-3" />
           {Object.values(filters).filter((v) => v !== null).length} active
         </Badge>
+      )}
+
+      {/* Clear Filters Button */}
+      {hasActiveFilters && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClearFilters}
+          className="h-8"
+        >
+          <XIcon className="size-4 mr-1" />
+          Clear Filters
+        </Button>
       )}
     </div>
   );

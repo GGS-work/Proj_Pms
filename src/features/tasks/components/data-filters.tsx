@@ -1,4 +1,4 @@
-import { FolderIcon, ListChecksIcon, UserIcon, CalendarIcon, CalendarRangeIcon } from "lucide-react";
+import { FolderIcon, ListChecksIcon, UserIcon, CalendarIcon, CalendarRangeIcon, XIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 
 import { useGetMembers } from "@/features/members/api/use-get-members";
@@ -7,6 +7,7 @@ import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useIsGlobalAdmin } from "@/features/members/api/use-get-user-role";
 
 import { DatePicker } from "@/components/date-picker";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -94,10 +95,47 @@ export const DataFilters = ({ hideProjectFilter }: DataFiltersProps) => {
     }
   };
 
+  const hasActiveFilters = status || assigneeId || projectId || dueDate || month || week;
+
+  const onClearFilters = () => {
+    setFilters({
+      status: null,
+      assigneeId: null,
+      projectId: null,
+      dueDate: null,
+      month: null,
+      week: null,
+    });
+  };
+
   if (isLoading) return null;
 
   return (
     <div className="flex flex-col lg:flex-row gap-2">
+      {!hideProjectFilter && (
+        <Select
+          defaultValue={projectId ?? undefined}
+          onValueChange={(value) => {
+            onProjectChange(value);
+          }}
+        >
+          <SelectTrigger className="w-full lg:w-auto h-8">
+            <div className="flex items-center pr-2">
+              <FolderIcon className="size-4 mr-2" />
+              <SelectValue placeholder="Select project" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All projects</SelectItem>
+            <SelectSeparator />
+            {projectOptions?.map((project) => (
+              <SelectItem key={project.value} value={project.value}>
+                {project.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
       <Select
         defaultValue={status ?? undefined}
         onValueChange={(value) => {
@@ -183,28 +221,6 @@ export const DataFilters = ({ hideProjectFilter }: DataFiltersProps) => {
           </SelectContent>
         </Select>
       )}
-      {!hideProjectFilter && (
-        <Select
-          defaultValue={projectId ?? undefined}
-          onValueChange={(value) => {
-            onProjectChange(value);
-          }}
-        >
-          <SelectTrigger className="w-full lg:w-auto h-8">
-            <div className="flex items-center pr-2">
-              <FolderIcon className="size-4 mr-2" />
-              <SelectValue placeholder="Select project" />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            {projectOptions?.map((project) => (
-              <SelectItem key={project.value} value={project.value}>
-                {project.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
       <DatePicker
         placeholder="Due date"
         className="h-8 w-full lg:w-auto"
@@ -213,6 +229,17 @@ export const DataFilters = ({ hideProjectFilter }: DataFiltersProps) => {
           setFilters({ dueDate: date ? date.toISOString() : null });
         }}
       />
+      {hasActiveFilters && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClearFilters}
+          className="h-8"
+        >
+          <XIcon className="size-4 mr-1" />
+          Clear Filters
+        </Button>
+      )}
     </div>
   );
 };
