@@ -144,21 +144,23 @@ export const ProjectsClient = () => {
                     </CardContent>
                   </Link>
                   {/* Edit button appears on hover */}
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        router.push(`/workspaces/${project.workspaceId}/projects/${project.id}/settings`);
-                      }}
-                      className="h-8 px-2"
-                    >
-                      <PencilIcon className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
-                  </div>
+                  {project.workspaceId && project.id && (
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          router.push(`/workspaces/${project.workspaceId}/projects/${project.id}/settings`);
+                        }}
+                        className="h-8 px-2"
+                      >
+                        <PencilIcon className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                    </div>
+                  )}
                 </Card>
               ))}
             </div>

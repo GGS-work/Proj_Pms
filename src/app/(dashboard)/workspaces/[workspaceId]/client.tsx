@@ -223,7 +223,7 @@ export const ProjectList = ({ data, total }: ProjectListProps) => {
                 </Card>
               </Link>
               {/* Edit button appears on hover */}
-              {permissions.canEditProject && (
+              {permissions.canEditProject && project.id && workspaceId && (
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                   <Button
                     size="sm"
