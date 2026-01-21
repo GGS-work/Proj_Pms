@@ -32,6 +32,7 @@ export const useGetProjectAnalytics = ({
 
       return data;
     },
+    enabled: !!projectId && projectId !== "undefined", // Only fetch if we have a valid projectId
   });
 
   return query;
