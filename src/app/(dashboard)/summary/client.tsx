@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useGetProjects } from "@/features/projects/api/use-get-projects";
 import { useGetRequirements } from "@/features/requirements/api/use-get-requirements";
+import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspaces";
 import { ProjectAvatar } from "@/features/projects/components/project-avatar";
 import { useCreateProjectModal } from "@/features/projects/hooks/use-create-project-modal";
 import { Button } from "@/components/ui/button";
@@ -19,11 +20,15 @@ import { MemberRole } from "@/features/members/types";
 export const ProjectsClient = () => {
   const { data: projects, isLoading } = useGetProjects({});
   const { data: requirements, isLoading: isLoadingRequirements } = useGetRequirements();
+  const { data: workspaces } = useGetWorkspaces();
   const { open } = useCreateProjectModal();
   const permissions = usePermissionContext();
   const router = useRouter();
   const [selectedRequirement, setSelectedRequirement] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Get first workspace as fallback for projects without workspaceId
+  const fallbackWorkspaceId = workspaces?.documents?.[0]?.id;
 
   const handleRequirementClick = (requirement: any) => {
     setSelectedRequirement(requirement);
@@ -152,10 +157,16 @@ export const ProjectsClient = () => {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          if (project.workspaceId && project.id) {
-                            router.push(`/workspaces/${project.workspaceId}/projects/${project.id}/settings`);
+                          const wsId = project.workspaceId || fallbackWorkspaceId;
+                          if (wsId && project.id) {
+                            router.push(`/workspaces/${wsId}/projects/${project.id}/settings`);
                           } else {
-                            console.error('Missing workspaceId or projectId:', { workspaceId: project.workspaceId, projectId: project.id });
+                            console.error('Missing workspaceId or projectId:', { 
+                              workspaceId: project.workspaceId, 
+                              fallbackWorkspaceId, 
+                              projectId: project.id 
+                            });
+                            alert('Cannot edit this project: Missing workspace information');
                           }
                         }}
                         className="h-8 px-2"
