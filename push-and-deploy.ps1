@@ -18,7 +18,7 @@ if ($LASTEXITCODE -eq 0) {
     
     # Deploy to Vercel
     Write-Host "Deploying to Vercel..." -ForegroundColor Yellow
-    $response = Invoke-WebRequest -Uri "https://api.vercel.com/v1/integrations/deploy/prj_DGbIL5vVnwe6QkERFRlwaUQaUWsL/k0Q57XplWQ" -Method POST -UseBasicParsing
+    $response = Invoke-WebRequest -Uri "https://api.vercel.com/v1/integrations/deploy/prj_DGbIL5vVnwe6QkERFRlwaUQaUWsL/SYv8VoW0Tu" -Method POST -UseBasicParsing
     
     if ($response.StatusCode -eq 201) {
         Write-Host "Vercel deployment triggered successfully!" -ForegroundColor Green
