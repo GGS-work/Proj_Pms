@@ -247,16 +247,26 @@ const app = new Hono()
       }
 
       if (dueDate) {
-        // Compare only the date part, ignoring time
+        // Compare only the date part, ignoring time (timezone-safe)
         const selectedDate = new Date(dueDate);
-        const startOfDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 0, 0, 0, 0);
-        const endOfDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59, 999);
+        // Set to UTC to avoid timezone issues
+        const startOfDay = new Date(Date.UTC(
+          selectedDate.getFullYear(), 
+          selectedDate.getMonth(), 
+          selectedDate.getDate(), 
+          0, 0, 0, 0
+        ));
+        const endOfDay = new Date(Date.UTC(
+          selectedDate.getFullYear(), 
+          selectedDate.getMonth(), 
+          selectedDate.getDate(), 
+          23, 59, 59, 999
+        ));
         
         conditions.push(
           and(
-            gte(tasks.dueDate, startOfDay),
-            lte(tasks.dueDate, endOfDay)
-          )
+            sql`DATE(${tasks.dueDate}) = DATE(${dueDate})`
+          )!
         );
       }
 
