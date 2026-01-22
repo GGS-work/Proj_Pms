@@ -233,7 +233,8 @@ const app = new Hono()
         }
       }
 
-      if (projectId) {
+      // Only add projectId filter if it's a specific project (not empty string which means "all projects")
+      if (projectId && projectId.trim() !== "") {
         conditions.push(eq(tasks.projectId, projectId));
       }
 

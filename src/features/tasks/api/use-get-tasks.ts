@@ -43,7 +43,9 @@ export const useGetTasks = ({
       
       // Only add parameters if they have actual values
       if (workspaceId) queryParams.workspaceId = workspaceId;
-      if (projectId) queryParams.projectId = projectId;
+      // Always include projectId in params, even if null, to distinguish between "no filter" and "filter by null"
+      // Only exclude if explicitly undefined
+      if (projectId !== undefined) queryParams.projectId = projectId === null ? "" : projectId;
       if (status) queryParams.status = status;
       if (assigneeId) queryParams.assigneeId = assigneeId;
       if (dueDate) queryParams.dueDate = dueDate;
