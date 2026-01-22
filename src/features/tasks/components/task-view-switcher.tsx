@@ -193,7 +193,7 @@ export const TaskViewSwitcher = ({
         ) : (
           <>
             <TabsContent value="table" className="mt-0">
-              {!currentProjectId ? (
+              {!currentProjectId && !effectiveWorkspaceId ? (
                 <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center gap-2">
                   <FolderIcon className="size-8 text-muted-foreground" />
                   <p className="text-muted-foreground text-center">
@@ -215,7 +215,7 @@ export const TaskViewSwitcher = ({
               )}
             </TabsContent>
             <TabsContent value="kanban" className="mt-0">
-              {!currentProjectId ? (
+              {!currentProjectId && !effectiveWorkspaceId ? (
                 <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center gap-2">
                   <FolderIcon className="size-8 text-muted-foreground" />
                   <p className="text-muted-foreground text-center">
@@ -230,7 +230,7 @@ export const TaskViewSwitcher = ({
               )}
             </TabsContent>
             <TabsContent value="calendar" className="mt-0 h-full pb-4">
-              {!currentProjectId ? (
+              {!currentProjectId && !effectiveWorkspaceId ? (
                 <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center gap-2">
                   <FolderIcon className="size-8 text-muted-foreground" />
                   <p className="text-muted-foreground text-center">
