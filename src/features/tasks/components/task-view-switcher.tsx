@@ -62,6 +62,8 @@ export const TaskViewSwitcher = ({
   const firstWorkspaceId = workspaces?.documents?.[0]?.id;
   const effectiveWorkspaceId = workspaceId || firstWorkspaceId;
 
+  // Check if any filter is active - tasks should only load when filters are selected
+  const hasActiveFilters = !!(currentProjectId || status || assigneeId || dueDate || month || week);
   
   // Only fetch project if we have a projectId
   const { data: project } = useGetProject({
@@ -78,11 +80,11 @@ export const TaskViewSwitcher = ({
     month,
     week,
     limit: 2000,
-  });
+  }, hasActiveFilters);
 
   // Also fetch individual tasks when viewing a project
   // This query gets tasks where projectId is null for the current user
-  const shouldFetchIndividualTasks = currentProjectId && currentUser?.id;
+  const shouldFetchIndividualTasks = !!(currentProjectId && currentUser?.id && hasActiveFilters);
   const { data: individualTasks, isLoading: isLoadingIndividualTasks } = useGetTasks({
     assigneeId: shouldFetchIndividualTasks ? currentUser.id : undefined,
     status,
@@ -90,7 +92,7 @@ export const TaskViewSwitcher = ({
     month,
     week,
     limit: 100,
-  });
+  }, shouldFetchIndividualTasks);
 
   // Combine project tasks with individual tasks (filter client-side)
   const combinedTasks = useMemo(() => {
@@ -193,11 +195,11 @@ export const TaskViewSwitcher = ({
         ) : (
           <>
             <TabsContent value="table" className="mt-0">
-              {!currentProjectId && !effectiveWorkspaceId ? (
+              {!hasActiveFilters ? (
                 <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center gap-2">
                   <FolderIcon className="size-8 text-muted-foreground" />
                   <p className="text-muted-foreground text-center">
-                    Please select a project to view tasks
+                    Please select a project or apply filters to view tasks
                   </p>
                 </div>
               ) : effectiveWorkspaceId ? (
@@ -215,11 +217,11 @@ export const TaskViewSwitcher = ({
               )}
             </TabsContent>
             <TabsContent value="kanban" className="mt-0">
-              {!currentProjectId && !effectiveWorkspaceId ? (
+              {!hasActiveFilters ? (
                 <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center gap-2">
                   <FolderIcon className="size-8 text-muted-foreground" />
                   <p className="text-muted-foreground text-center">
-                    Please select a project to view tasks
+                    Please select a project or apply filters to view tasks
                   </p>
                 </div>
               ) : (
@@ -230,11 +232,11 @@ export const TaskViewSwitcher = ({
               )}
             </TabsContent>
             <TabsContent value="calendar" className="mt-0 h-full pb-4">
-              {!currentProjectId && !effectiveWorkspaceId ? (
+              {!hasActiveFilters ? (
                 <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center gap-2">
                   <FolderIcon className="size-8 text-muted-foreground" />
                   <p className="text-muted-foreground text-center">
-                    Please select a project to view tasks
+                    Please select a project or apply filters to view tasks
                   </p>
                 </div>
               ) : (

@@ -264,7 +264,8 @@ export const DynamicDataFilters = ({ hideProjectFilter }: DynamicDataFiltersProp
         className="h-8 w-full lg:w-auto"
         value={(filters as any).dueDate ? new Date((filters as any).dueDate) : undefined}
         onChange={(date) => {
-          setFilters({ dueDate: date ? date.toISOString() : null } as any);
+          // Format as YYYY-MM-DD for consistent filtering
+          setFilters({ dueDate: date ? date.toISOString().split('T')[0] : null } as any);
         }}
       />
 

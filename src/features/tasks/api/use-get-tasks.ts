@@ -28,7 +28,7 @@ export const useGetTasks = ({
   week,
   limit = 50,  // Optimized for performance
   offset = 0,
-}: UseGetTasksProps) => {
+}: UseGetTasksProps, enabled: boolean = true) => {
   const query = useQuery({
     queryKey: ["tasks", workspaceId, projectId, status, assigneeId, dueDate, search, month, week, limit, offset],
     queryFn: async () => {
@@ -75,6 +75,7 @@ export const useGetTasks = ({
 
       return data;
     },
+    enabled,                        // Only fetch when enabled flag is true
     staleTime: 30 * 1000,           // 30 seconds - shorter for better data freshness
     gcTime: 10 * 60 * 1000,         // 10 minutes - keep in cache longer
     refetchOnWindowFocus: true,     // Refetch when window gains focus
