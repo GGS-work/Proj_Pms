@@ -62,8 +62,9 @@ export const TaskViewSwitcher = ({
   const firstWorkspaceId = workspaces?.documents?.[0]?.id;
   const effectiveWorkspaceId = workspaceId || firstWorkspaceId;
 
-  // Check if any filter is active - tasks should only load when filters are selected
-  const hasActiveFilters = !!(currentProjectId || status || assigneeId || dueDate || month || week);
+  // Check if any filter is active - only check explicit filter selections, not URL params
+  // This ensures tasks don't load until user actively selects a filter
+  const hasActiveFilters = !!(projectId || status || assigneeId || dueDate || month || week);
   
   // Only fetch project if we have a projectId
   const { data: project } = useGetProject({
