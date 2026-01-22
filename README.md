@@ -12,7 +12,7 @@
   <p align="center">
     A modern, full-featured project management platform built with Next.js, TypeScript, and PostgreSQL
     <br />
-    <!-- Auto-deploy test: Main branch - January 2026 -->
+    <!-- ✅ Vercel Auto-Deploy Testing - Updated: Jan 22, 2026 -->
     <br />
     <a href="./docs/COMPREHENSIVE_SYSTEM_GUIDE.md"><strong>📚 Explore the Documentation »</strong></a>
     <br />
