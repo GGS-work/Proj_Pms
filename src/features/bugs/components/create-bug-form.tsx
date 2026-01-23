@@ -63,11 +63,26 @@ export const CreateBugForm = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
 
+  // Default bug types
+  const defaultBugTypes = [
+    "Functional Bug",
+    "Logical Bug",
+    "Performance Bug",
+    "Security Bug",
+    "UI/UX Bug",
+    "Compatibility Bug",
+    "Integration Bug",
+    "Data Bug",
+    "Configuration Bug",
+    "Regression Bug",
+    "Deployment Bug",
+  ];
+
   const form = useForm<z.infer<typeof createBugSchema>>({
     resolver: zodResolver(createBugSchema.omit({ workspaceId: true })),
     defaultValues: {
       assignedTo: undefined,
-      bugType: "Development",
+      bugType: "Functional Bug",
       bugDescription: "",
       fileUrl: undefined,
       priority: BugPriority.MEDIUM,
@@ -242,20 +257,25 @@ export const CreateBugForm = ({
                       </FormControl>
                       <FormMessage />
                       <SelectContent>
-                        {loadingBugTypes ? (
-                          <SelectItem value="loading" disabled>
-                            Loading...
+                        {/* Default bug types */}
+                        {defaultBugTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
                           </SelectItem>
-                        ) : bugTypes.length === 0 ? (
-                          <SelectItem value="none" disabled>
-                            No bug types available
-                          </SelectItem>
-                        ) : (
-                          bugTypes.map((type) => (
-                            <SelectItem key={type.id} value={type.name}>
-                              {type.name}
+                        ))}
+                        
+                        {/* Custom bug types from database */}
+                        {!loadingBugTypes && bugTypes.length > 0 && (
+                          <>
+                            <SelectItem value="separator" disabled className="border-t my-1">
+                              ─── Custom Types ───
                             </SelectItem>
-                          ))
+                            {bugTypes.map((type) => (
+                              <SelectItem key={type.id} value={type.name}>
+                                {type.name}
+                              </SelectItem>
+                            ))}
+                          </>
                         )}
                       </SelectContent>
                     </Select>
