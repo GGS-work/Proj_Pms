@@ -15,9 +15,8 @@ export const CreateTaskFormWrapper = ({
 }: CreateTaskFormWrapperProps) => {
   const workspaceId = useWorkspaceId();
 
-  const { data: projects, isLoading: isLoadingProjects } = useGetProjects({
-    workspaceId,
-  });
+  // Load projects without workspace filter to show all available projects
+  const { data: projects, isLoading: isLoadingProjects } = useGetProjects({});
   
   // Fetch ALL users for task assignment (not restricted by employee's project access)
   const { data: members, isLoading: isLoadingMembers } = useGetMembers({
