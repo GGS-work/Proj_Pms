@@ -113,22 +113,20 @@ export const JiraDashboard = () => {
 
   // Apply filters - filter the tasks based on selected criteria
   const tasks = useMemo(() => {
-    // Return empty array if no project is selected
-    if (!selectedProject || selectedProject === "all") {
-      console.log("No project selected - returning empty tasks");
-      return [];
-    }
-    
     let filtered = [...allTasks];
     
     console.log("Starting filter with", filtered.length, "tasks");
     
-    // Filter by project
-    const beforeCount = filtered.length;
-    filtered = filtered.filter((task) => task.projectId === selectedProject);
-    console.log(`Project filter: ${beforeCount} -> ${filtered.length} (looking for projectId: ${selectedProject})`);
-    if (filtered.length === 0 && beforeCount > 0) {
-      console.log("Sample projectIds in data:", allTasks.slice(0, 3).map(t => t.projectId));
+    // Filter by project - only if a specific project is selected
+    if (selectedProject && selectedProject !== "all") {
+      const beforeCount = filtered.length;
+      filtered = filtered.filter((task) => task.projectId === selectedProject);
+      console.log(`Project filter: ${beforeCount} -> ${filtered.length} (looking for projectId: ${selectedProject})`);
+      if (filtered.length === 0 && beforeCount > 0) {
+        console.log("Sample projectIds in data:", allTasks.slice(0, 3).map(t => t.projectId));
+      }
+    } else {
+      console.log("Showing all tasks (no project filter)");
     }
     
     if (selectedStatus !== "all") {
