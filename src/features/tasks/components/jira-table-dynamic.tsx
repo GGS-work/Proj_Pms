@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, memo, useEffect } from "react";
-import { ChevronDown, ChevronRight, Plus, MoreVertical, Eye, EyeOff, Trash2, Settings, Edit, Copy, Check } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, MoreVertical, Eye, EyeOff, Trash2, Settings, Edit, Copy, Check, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -72,6 +72,17 @@ export function JiraTableDynamic({ data, workspaceId, onAddSubtask, canCreateTas
   const [creatingSubtaskForId, setCreatingSubtaskForId] = useState<string | null>(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [isCopied, setIsCopied] = useState(false);
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  
+  const toggleSort = (fieldName: string) => {
+    if (sortField === fieldName) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(fieldName);
+      setSortOrder("asc");
+    }
+  };
   
   // Extract projectId from the first task (all tasks in this view belong to the same project)
   const projectId = data?.[0]?.projectId;
@@ -172,9 +183,39 @@ export function JiraTableDynamic({ data, workspaceId, onAddSubtask, canCreateTas
     }))
   });
   
+  // Sort parent tasks if sort field is selected
+  let sortedParentTasks = [...parentTasks];
+  if (sortField) {
+    sortedParentTasks.sort((a: any, b: any) => {
+      let aValue = a[sortField];
+      let bValue = b[sortField];
+      
+      // Handle nested object properties (e.g., assignee.name, project.name)
+      if (sortField === 'assigneeId' && a.assignee && b.assignee) {
+        aValue = a.assignee.name || '';
+        bValue = b.assignee.name || '';
+      } else if (sortField === 'projectId' && a.project && b.project) {
+        aValue = a.project.name || '';
+        bValue = b.project.name || '';
+      }
+      
+      // Handle null/undefined values
+      if (aValue == null) aValue = '';
+      if (bValue == null) bValue = '';
+      
+      // Convert to lowercase for string comparison
+      if (typeof aValue === 'string') aValue = aValue.toLowerCase();
+      if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+      
+      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+  
   // Limit displayed tasks for performance
-  const displayedParentTasks = parentTasks.slice(0, displayLimit);
-  const hasMore = parentTasks.length > displayLimit;
+  const displayedParentTasks = sortedParentTasks.slice(0, displayLimit);
+  const hasMore = sortedParentTasks.length > displayLimit;
 
 
   const toggleRow = (taskId: string) => {
@@ -1019,6 +1060,16 @@ export function JiraTableDynamic({ data, workspaceId, onAddSubtask, canCreateTas
                   style={{ width: `${width}px`, minWidth: `${minWidth}px` }}
                 >
                   <span className="truncate">{column.displayName}</span>
+                  <button 
+                    onClick={() => toggleSort(column.fieldName)}
+                    className="ml-auto hover:text-foreground transition-colors"
+                  >
+                    {sortField === column.fieldName ? (
+                      sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+                    )}
+                  </button>
                 </div>
               );
             })}
