@@ -1130,6 +1130,14 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
                   </p>
                 </div>
                 <div>
+                  <p className="text-muted-foreground">Extra Hours</p>
+                  <p className="font-medium text-orange-600 text-lg">
+                    {selectedRecord.totalDuration && calculateExtraHours(selectedRecord.totalDuration) > 0
+                      ? formatDuration(calculateExtraHours(selectedRecord.totalDuration))
+                      : "-"}
+                  </p>
+                </div>
+                <div>
                   <p className="text-muted-foreground">Status</p>
                   <Badge
                     variant={
@@ -1208,6 +1216,7 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
                       <TableHead className="font-semibold">Start Time</TableHead>
                       <TableHead className="font-semibold">End Time</TableHead>
                       <TableHead className="font-semibold">Duration</TableHead>
+                      <TableHead className="font-semibold">Extra Hours</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1219,6 +1228,11 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
                         <TableCell>{formatTime(record.shiftStartTime)}</TableCell>
                         <TableCell>{record.shiftEndTime ? formatTime(record.shiftEndTime) : <span className="text-muted-foreground">In Progress</span>}</TableCell>
                         <TableCell className="font-medium">{record.totalDuration ? formatDuration(record.totalDuration) : <span className="text-muted-foreground">N/A</span>}</TableCell>
+                        <TableCell className="font-medium text-orange-600">
+                          {record.totalDuration && calculateExtraHours(record.totalDuration) > 0
+                            ? formatDuration(calculateExtraHours(record.totalDuration))
+                            : "-"}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -1228,7 +1242,7 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
               {/* Summary Section */}
               <div className="rounded-lg border bg-muted/50 p-4">
                 <h3 className="font-semibold text-sm mb-3">Summary</h3>
-                <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-4 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground text-xs">Total Days</p>
                     <p className="font-bold text-lg text-foreground">
@@ -1245,6 +1259,15 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
                       {(filteredRecords.reduce((sum: number, r: any) => sum + (r.totalDuration || 0), 0) / 60).toFixed(2)}h
                     </p>
                   </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">Total Extra Hours</p>
+                    <p className="font-bold text-lg text-orange-600">
+                      {(() => {
+                        const totalExtra = filteredRecords.reduce((sum: number, r: any) => sum + calculateExtraHours(r.totalDuration), 0);
+                        return totalExtra > 0 ? (totalExtra / 60).toFixed(2) + 'h' : '-';
+                      })()}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1259,6 +1282,7 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
                     <TableHead className="font-semibold">Starting Date</TableHead>
                     <TableHead className="font-semibold">Ending Date</TableHead>
                     <TableHead className="font-semibold">Duration</TableHead>
+                    <TableHead className="font-semibold">Extra Hours</TableHead>
                     <TableHead className="font-semibold">Total Days</TableHead>
                     <TableHead className="font-semibold">Total Hours</TableHead>
                   </TableRow>
@@ -1295,6 +1319,10 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
                       
                       const totalHours = (totalMinutes / 60).toFixed(2);
                       const duration = formatDuration(totalMinutes);
+                      
+                      // Calculate total extra hours
+                      const totalExtraMinutes = sortedRecords.reduce((sum, r) => sum + calculateExtraHours(r.totalDuration), 0);
+                      const extraHoursStr = totalExtraMinutes > 0 ? formatDuration(totalExtraMinutes) : '-';
 
                       return (
                         <TableRow key={userId} className="hover:bg-muted/50">
@@ -1303,6 +1331,7 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
                           <TableCell>{startingDate}</TableCell>
                           <TableCell>{endingDate}</TableCell>
                           <TableCell className="font-medium">{duration}</TableCell>
+                          <TableCell className="font-medium text-orange-600">{extraHoursStr}</TableCell>
                           <TableCell>{totalDays}</TableCell>
                           <TableCell className="font-semibold">{totalHours}h</TableCell>
                         </TableRow>
