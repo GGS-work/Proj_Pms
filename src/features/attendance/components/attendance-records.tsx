@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Download, Loader2, Clock, CheckCircle2, Filter, FileText, CalendarIcon, CalendarRangeIcon, ShieldAlert, Eye, X } from "lucide-react";
+import { Download, Loader2, Clock, CheckCircle2, Filter, FileText, CalendarIcon, CalendarRangeIcon, ShieldAlert, Eye, X, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import ExcelJS from 'exceljs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,6 +81,17 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
   const [selectedEmployeeFilter, setSelectedEmployeeFilter] = useState<string>("all");
   const [selectedWeek, setSelectedWeek] = useState<string>("");
   const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [sortField, setSortField] = useState<string>("shiftStartTime");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  const toggleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+  };
 
   // Admin check: if useGetAllEmployees fails, user is not admin
   const isAdmin = !employeesError && allEmployees !== undefined;
@@ -135,8 +146,43 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
       });
     }
     
-    return filtered;
-  }, [records, selectedEmployeeFilter, selectedWeek, selectedMonth]);
+    // Sort filtered records
+    const sorted = [...filtered].sort((a: any, b: any) => {
+      let aValue: any;
+      let bValue: any;
+      
+      switch (sortField) {
+        case "shiftStartTime":
+          aValue = new Date(a.shiftStartTime).getTime();
+          bValue = new Date(b.shiftStartTime).getTime();
+          break;
+        case "userName":
+          aValue = (a.userName || "").toLowerCase();
+          bValue = (b.userName || "").toLowerCase();
+          break;
+        case "userEmail":
+          aValue = (a.userEmail || "").toLowerCase();
+          bValue = (b.userEmail || "").toLowerCase();
+          break;
+        case "totalDuration":
+          aValue = a.totalDuration || 0;
+          bValue = b.totalDuration || 0;
+          break;
+        case "status":
+          aValue = a.status || "";
+          bValue = b.status || "";
+          break;
+        default:
+          return 0;
+      }
+      
+      if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+    
+    return sorted;
+  }, [records, selectedEmployeeFilter, selectedWeek, selectedMonth, sortField, sortOrder]);
 
   const formatDuration = (minutes: number | null) => {
     if (!minutes) return "N/A";
@@ -862,13 +908,68 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Employee Name</TableHead>
-                  <TableHead>Email</TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      Date
+                      <button onClick={() => toggleSort("shiftStartTime")} className="ml-1 hover:text-foreground">
+                        {sortField === "shiftStartTime" ? (
+                          sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+                        )}
+                      </button>
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      Employee Name
+                      <button onClick={() => toggleSort("userName")} className="ml-1 hover:text-foreground">
+                        {sortField === "userName" ? (
+                          sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+                        )}
+                      </button>
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      Email
+                      <button onClick={() => toggleSort("userEmail")} className="ml-1 hover:text-foreground">
+                        {sortField === "userEmail" ? (
+                          sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+                        )}
+                      </button>
+                    </div>
+                  </TableHead>
                   <TableHead>Start Time</TableHead>
                   <TableHead>End Time</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      Duration
+                      <button onClick={() => toggleSort("totalDuration")} className="ml-1 hover:text-foreground">
+                        {sortField === "totalDuration" ? (
+                          sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+                        )}
+                      </button>
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      Status
+                      <button onClick={() => toggleSort("status")} className="ml-1 hover:text-foreground">
+                        {sortField === "status" ? (
+                          sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+                        )}
+                      </button>
+                    </div>
+                  </TableHead>
                   <TableHead>Daily Tasks</TableHead>
                 </TableRow>
             </TableHeader>
