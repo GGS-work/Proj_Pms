@@ -282,7 +282,7 @@ export const AdminBugHistory = ({ isAdmin = false }: AdminBugHistoryProps) => {
           <div className="flex flex-wrap gap-2 mb-4">
             <span className="text-sm text-muted-foreground flex items-center">Sort by:</span>
             <Button
-              variant={sortField === "bugId" ? "default" : "outline"}
+              variant={sortField === "bugId" ? "primary" : "outline"}
               size="sm"
               onClick={() => toggleSort("bugId")}
               className="h-8"
@@ -293,7 +293,7 @@ export const AdminBugHistory = ({ isAdmin = false }: AdminBugHistoryProps) => {
               )}
             </Button>
             <Button
-              variant={sortField === "status" ? "default" : "outline"}
+              variant={sortField === "status" ? "primary" : "outline"}
               size="sm"
               onClick={() => toggleSort("status")}
               className="h-8"
@@ -304,7 +304,7 @@ export const AdminBugHistory = ({ isAdmin = false }: AdminBugHistoryProps) => {
               )}
             </Button>
             <Button
-              variant={sortField === "priority" ? "default" : "outline"}
+              variant={sortField === "priority" ? "primary" : "outline"}
               size="sm"
               onClick={() => toggleSort("priority")}
               className="h-8"
@@ -315,7 +315,7 @@ export const AdminBugHistory = ({ isAdmin = false }: AdminBugHistoryProps) => {
               )}
             </Button>
             <Button
-              variant={sortField === "createdAt" ? "default" : "outline"}
+              variant={sortField === "createdAt" ? "primary" : "outline"}
               size="sm"
               onClick={() => toggleSort("createdAt")}
               className="h-8"
