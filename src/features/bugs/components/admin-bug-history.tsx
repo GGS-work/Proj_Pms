@@ -278,55 +278,6 @@ export const AdminBugHistory = ({ isAdmin = false }: AdminBugHistoryProps) => {
             </Select>
           </div>
 
-          {/* Sort Controls */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <span className="text-sm text-muted-foreground flex items-center">Sort by:</span>
-            <Button
-              variant={sortField === "bugId" ? "primary" : "outline"}
-              size="sm"
-              onClick={() => toggleSort("bugId")}
-              className="h-8"
-            >
-              Bug ID
-              {sortField === "bugId" && (
-                sortOrder === "asc" ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />
-              )}
-            </Button>
-            <Button
-              variant={sortField === "status" ? "primary" : "outline"}
-              size="sm"
-              onClick={() => toggleSort("status")}
-              className="h-8"
-            >
-              Status
-              {sortField === "status" && (
-                sortOrder === "asc" ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />
-              )}
-            </Button>
-            <Button
-              variant={sortField === "priority" ? "primary" : "outline"}
-              size="sm"
-              onClick={() => toggleSort("priority")}
-              className="h-8"
-            >
-              Priority
-              {sortField === "priority" && (
-                sortOrder === "asc" ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />
-              )}
-            </Button>
-            <Button
-              variant={sortField === "createdAt" ? "primary" : "outline"}
-              size="sm"
-              onClick={() => toggleSort("createdAt")}
-              className="h-8"
-            >
-              Date
-              {sortField === "createdAt" && (
-                sortOrder === "asc" ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />
-              )}
-            </Button>
-          </div>
-
           {/* Mobile Card View - Hidden on large screens */}
           <div className="lg:hidden space-y-4">
             {filteredBugs.length === 0 ? (
@@ -387,15 +338,59 @@ export const AdminBugHistory = ({ isAdmin = false }: AdminBugHistoryProps) => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[100px]">Bug ID</TableHead>
-                  <TableHead className="min-w-[110px]">Status</TableHead>
-                  <TableHead className="min-w-[100px]">Priority</TableHead>
+                  <TableHead className="min-w-[100px]">
+                    <div className="flex items-center gap-1">
+                      Bug ID
+                      <button onClick={() => toggleSort("bugId")} className="ml-1 hover:text-foreground">
+                        {sortField === "bugId" ? (
+                          sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+                        )}
+                      </button>
+                    </div>
+                  </TableHead>
+                  <TableHead className="min-w-[110px]">
+                    <div className="flex items-center gap-1">
+                      Status
+                      <button onClick={() => toggleSort("status")} className="ml-1 hover:text-foreground">
+                        {sortField === "status" ? (
+                          sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+                        )}
+                      </button>
+                    </div>
+                  </TableHead>
+                  <TableHead className="min-w-[100px]">
+                    <div className="flex items-center gap-1">
+                      Priority
+                      <button onClick={() => toggleSort("priority")} className="ml-1 hover:text-foreground">
+                        {sortField === "priority" ? (
+                          sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+                        )}
+                      </button>
+                    </div>
+                  </TableHead>
                   <TableHead className="min-w-[120px]">Type</TableHead>
                   <TableHead className="min-w-[200px] max-w-[300px]">Description</TableHead>
                   <TableHead className="min-w-[150px]">Assigned To</TableHead>
                   <TableHead className="min-w-[150px]">Reported By</TableHead>
                   <TableHead className="text-center min-w-[100px]">Comments</TableHead>
-                  <TableHead className="min-w-[120px]">Created</TableHead>
+                  <TableHead className="min-w-[120px]">
+                    <div className="flex items-center gap-1">
+                      Created
+                      <button onClick={() => toggleSort("createdAt")} className="ml-1 hover:text-foreground">
+                        {sortField === "createdAt" ? (
+                          sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+                        )}
+                      </button>
+                    </div>
+                  </TableHead>
                   <TableHead className="min-w-[100px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
