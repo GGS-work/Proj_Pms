@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Bug, Download, Filter, MessageSquare, FileText, Calendar, User, AlertCircle } from "lucide-react";
+import { Bug, Download, Filter, MessageSquare, FileText, Calendar, User, AlertCircle, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { format } from "date-fns";
 
 import { useGetAllBugsAdmin } from "../api/use-get-all-bugs-admin";
@@ -38,10 +38,21 @@ export const AdminBugHistory = ({ isAdmin = false }: AdminBugHistoryProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [sortField, setSortField] = useState<string>("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  // Filter bugs based on search and filters
+  const toggleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+  };
+
+  // Filter and sort bugs
   const filteredBugs = useMemo(() => {
-    return allBugs.filter((bug) => {
+    let filtered = allBugs.filter((bug) => {
       const matchesSearch =
         bug.bugId.toLowerCase().includes(searchQuery.toLowerCase()) ||
         bug.bugDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -53,7 +64,41 @@ export const AdminBugHistory = ({ isAdmin = false }: AdminBugHistoryProps) => {
 
       return matchesSearch && matchesStatus && matchesPriority;
     });
-  }, [allBugs, searchQuery, statusFilter, priorityFilter]);
+
+    // Sort bugs
+    return filtered.sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortField) {
+        case "bugId":
+          aValue = a.bugId;
+          bValue = b.bugId;
+          break;
+        case "status":
+          aValue = a.status;
+          bValue = b.status;
+          break;
+        case "priority":
+          const priorityOrder = { [BugPriority.CRITICAL]: 4, [BugPriority.HIGH]: 3, [BugPriority.MEDIUM]: 2, [BugPriority.LOW]: 1 };
+          aValue = priorityOrder[a.priority as BugPriority] || 0;
+          bValue = priorityOrder[b.priority as BugPriority] || 0;
+          break;
+        case "createdAt":
+          aValue = new Date(a.createdAt).getTime();
+          bValue = new Date(b.createdAt).getTime();
+          break;
+        default:
+          aValue = a.createdAt;
+          bValue = b.createdAt;
+      }
+
+      if (sortOrder === "asc") {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+  }, [allBugs, searchQuery, statusFilter, priorityFilter, sortField, sortOrder]);
 
   const getPriorityColor = (priority: string | null) => {
     switch (priority) {
@@ -231,6 +276,55 @@ export const AdminBugHistory = ({ isAdmin = false }: AdminBugHistoryProps) => {
                 <SelectItem value={BugPriority.CRITICAL}>Critical</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Sort Controls */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            <span className="text-sm text-muted-foreground flex items-center">Sort by:</span>
+            <Button
+              variant={sortField === "bugId" ? "default" : "outline"}
+              size="sm"
+              onClick={() => toggleSort("bugId")}
+              className="h-8"
+            >
+              Bug ID
+              {sortField === "bugId" && (
+                sortOrder === "asc" ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />
+              )}
+            </Button>
+            <Button
+              variant={sortField === "status" ? "default" : "outline"}
+              size="sm"
+              onClick={() => toggleSort("status")}
+              className="h-8"
+            >
+              Status
+              {sortField === "status" && (
+                sortOrder === "asc" ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />
+              )}
+            </Button>
+            <Button
+              variant={sortField === "priority" ? "default" : "outline"}
+              size="sm"
+              onClick={() => toggleSort("priority")}
+              className="h-8"
+            >
+              Priority
+              {sortField === "priority" && (
+                sortOrder === "asc" ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />
+              )}
+            </Button>
+            <Button
+              variant={sortField === "createdAt" ? "default" : "outline"}
+              size="sm"
+              onClick={() => toggleSort("createdAt")}
+              className="h-8"
+            >
+              Date
+              {sortField === "createdAt" && (
+                sortOrder === "asc" ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />
+              )}
+            </Button>
           </div>
 
           {/* Mobile Card View - Hidden on large screens */}
