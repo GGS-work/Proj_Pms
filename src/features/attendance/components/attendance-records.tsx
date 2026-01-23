@@ -168,6 +168,10 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
           aValue = a.totalDuration || 0;
           bValue = b.totalDuration || 0;
           break;
+        case "extraHours":
+          aValue = calculateExtraHours(a.totalDuration);
+          bValue = calculateExtraHours(b.totalDuration);
+          break;
         case "status":
           aValue = a.status || "";
           bValue = b.status || "";
@@ -189,6 +193,13 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours}h ${mins}m`;
+  };
+
+  const calculateExtraHours = (minutes: number | null) => {
+    if (!minutes) return 0;
+    const totalHours = minutes / 60;
+    const extraHours = totalHours > 9 ? totalHours - 9 : 0;
+    return Math.floor(extraHours * 60); // Return extra minutes
   };
 
   const formatDate = (date: string) => {
@@ -254,6 +265,7 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
       { header: 'Start Time', key: 'startTime', width: 20 },
       { header: 'End Time', key: 'endTime', width: 20 },
       { header: 'Total Duration', key: 'duration', width: 15 },
+      { header: 'Extra Hours', key: 'extraHours', width: 15 },
       { header: 'Shifts', key: 'shifts', width: 10 },
       { header: 'Status', key: 'status', width: 15 },
     ];
@@ -290,6 +302,8 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
         ? 'AUTO_COMPLETED' 
         : Array.from(group.statuses).join(', ');
       
+      const extraHoursMin = calculateExtraHours(group.totalDuration);
+      
       const row = worksheet.addRow({
         date: formatDate(group.date),
         employeeName: group.employeeName,
@@ -297,6 +311,7 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
         startTime: startTimes,
         endTime: endTimes,
         duration: formatDuration(group.totalDuration),
+        extraHours: extraHoursMin > 0 ? formatDuration(extraHoursMin) : '-',
         shifts: group.shifts.length,
         status: statusText,
       });
@@ -503,6 +518,7 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
         { header: 'Start Time', key: 'startTime', width: 12 },
         { header: 'End Time', key: 'endTime', width: 12 },
         { header: 'Duration', key: 'duration', width: 12 },
+        { header: 'Extra Hours', key: 'extraHours', width: 12 },
       ];
 
       // Style header
@@ -518,13 +534,15 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
 
       // Add data rows
       filteredRecords.forEach((record: any) => {
+        const extraHoursMin = calculateExtraHours(record.totalDuration);
         worksheet.addRow({
           employeeName: employee?.name || 'Unknown',
           email: employee?.email || 'N/A',
           date: formatDate(record.shiftStartTime),
           startTime: formatTime(record.shiftStartTime),
           endTime: record.shiftEndTime ? formatTime(record.shiftEndTime) : 'In Progress',
-          duration: record.totalDuration ? formatDuration(record.totalDuration) : 'N/A'
+          duration: record.totalDuration ? formatDuration(record.totalDuration) : 'N/A',
+          extraHours: extraHoursMin > 0 ? formatDuration(extraHoursMin) : '-'
         });
       });
 
@@ -600,6 +618,7 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
         { header: 'Starting Date', key: 'startingDate', width: 15 },
         { header: 'Ending Date', key: 'endingDate', width: 15 },
         { header: 'Duration', key: 'duration', width: 15 },
+        { header: 'Extra Hours', key: 'extraHours', width: 15 },
         { header: 'Total Days', key: 'totalDays', width: 12 },
         { header: 'Total Hours', key: 'totalHours', width: 15 },
       ];
@@ -636,12 +655,17 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
         );
         const totalDays = uniqueDates.size;
         
+        // Calculate total extra hours across all records
+        const totalExtraMinutes = records.reduce((sum, r) => sum + calculateExtraHours(r.totalDuration), 0);
+        const extraHoursStr = totalExtraMinutes > 0 ? formatDuration(totalExtraMinutes) : '-';
+        
         worksheet.addRow({
           employeeName: employee?.name || 'Unknown',
           email: employee?.email || 'N/A',
           startingDate: startDate,
           endingDate: endDate,
           duration: durationStr,
+          extraHours: extraHoursStr,
           totalDays: totalDays,
           totalHours: `${totalHours}h ${totalMins}m`
         });
@@ -960,6 +984,18 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
                   </TableHead>
                   <TableHead>
                     <div className="flex items-center gap-1">
+                      Extra Hours
+                      <button onClick={() => toggleSort("extraHours")} className="ml-1 hover:text-foreground">
+                        {sortField === "extraHours" ? (
+                          sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+                        )}
+                      </button>
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
                       Status
                       <button onClick={() => toggleSort("status")} className="ml-1 hover:text-foreground">
                         {sortField === "status" ? (
@@ -991,6 +1027,11 @@ export const AttendanceRecords = ({ workspaceId }: AttendanceRecordsProps = {}) 
                     </TableCell>
                     <TableCell>
                       {record.totalDuration ? formatDuration(record.totalDuration) : "-"}
+                    </TableCell>
+                    <TableCell>
+                      {record.totalDuration && calculateExtraHours(record.totalDuration) > 0 
+                        ? formatDuration(calculateExtraHours(record.totalDuration))
+                        : "-"}
                     </TableCell>
                     <TableCell>
                       <Badge
