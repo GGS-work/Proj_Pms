@@ -62,9 +62,9 @@ export const TaskViewSwitcher = ({
   const firstWorkspaceId = workspaces?.documents?.[0]?.id;
   const effectiveWorkspaceId = workspaceId || firstWorkspaceId;
 
-  // Check if any filter is active - only check explicit filter selections, not URL params
-  // This ensures tasks don't load until user actively selects a filter
-  const hasActiveFilters = !!(projectId || status || assigneeId || dueDate || month || week);
+  // Check if any filter is active OR if we're viewing all tasks
+  // Allow viewing tasks without filters to support "all tasks" view
+  const hasActiveFilters = true; // Always show tasks, filters are optional
   
   // Only fetch project if we have a projectId
   const { data: project } = useGetProject({
@@ -81,11 +81,11 @@ export const TaskViewSwitcher = ({
     month,
     week,
     limit: 2000,
-  }, hasActiveFilters);
+  });
 
   // Also fetch individual tasks when viewing a project
   // This query gets tasks where projectId is null for the current user
-  const shouldFetchIndividualTasks = !!(currentProjectId && currentUser?.id && hasActiveFilters);
+  const shouldFetchIndividualTasks = !!(currentProjectId && currentUser?.id);
   const { data: individualTasks, isLoading: isLoadingIndividualTasks } = useGetTasks({
     assigneeId: shouldFetchIndividualTasks ? currentUser.id : undefined,
     status,
