@@ -7,7 +7,7 @@
     <img src="public/logo.svg" alt="Logo" width="80" height="80">
   </a>
 
-  <h1 align="center">📊 Proj_Pms - Enterprise Project Management System</h1>
+  <h1 align="center">📊 Proj_Pms - Enterprise Project Management </h1>
   <!-- Test fresh deployment -->
 
   <p align="center">
